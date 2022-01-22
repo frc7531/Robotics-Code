@@ -34,7 +34,7 @@ public class Robot extends TimedRobot {
   Joystick leftStick = new Joystick(0);
   Joystick rightStick = new Joystick(1);
 
-  private boolean idleMode = true; // false = coast, true = brake
+  private boolean idleMode = false; // false = coast, true = brake
 
   @Override
   public void robotInit() {
@@ -61,7 +61,7 @@ public class Robot extends TimedRobot {
 
   @Override
   public void teleopPeriodic() {
-    drive(leftStick.getY(), rightStick.getY(), true, 20);
+    drive(leftStick.getY(), rightStick.getY(), true, 1000);
   }
 
   /**Custom method to drive the robot in tank drive mode, with square input mode
