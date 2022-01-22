@@ -63,32 +63,38 @@ public class Robot extends TimedRobot {
   public void teleopPeriodic() {
     drive(leftStick.getY(), rightStick.getY(), true, 20);
   }
-  /**Custom method to drive the robot in tank drive mode, with square input mode*/
+
+  /**Custom method to drive the robot in tank drive mode, with square input mode
+   * @param left_speed The speed of the left motors
+   * @param right_speed The speed of the right motors
+   * @param squareInputs Whether or not to square the inputs before driving(makes it easier to control at lower speeds)
+   * @param deadZone how big of a dead zone to have on the joysticks, bigger number means smaller, recommended 20
+  */
   public void drive(double left_speed, double right_speed, boolean squareInputs, float deadZone) {
+    double leftSquare = Math.copySign(Math.pow(left_speed, 2), left_speed);
+    double rightSquare = Math.copySign(Math.pow(right_speed, 2), right_speed);
+
+    double leftSpeed;
+    double rightSpeed;
+
     if(squareInputs) {
-      if((int)(left_speed * deadZone) != 0) {
-        leftMotor1.set(-Math.copySign(left_speed * left_speed, left_speed));
-        leftMotor2.set(-Math.copySign(left_speed * left_speed, left_speed));
-        leftMotor3.set(-Math.copySign(left_speed * left_speed, left_speed));
-      } else { leftMotor1.set(0);  leftMotor2.set(0);  leftMotor3.set(0); }
-
-      if((int)(right_speed * deadZone) != 0) {
-        rightMotor1.set(Math.copySign(right_speed * right_speed, right_speed));
-        rightMotor2.set(Math.copySign(right_speed * right_speed, right_speed));
-        rightMotor3.set(Math.copySign(right_speed * right_speed, right_speed));
-      } else { rightMotor1.set(0);  rightMotor2.set(0);  rightMotor3.set(0); }
+      leftSpeed = -leftSquare;
+      rightSpeed = rightSquare;
     } else {
-      if((int)(left_speed * deadZone) != 0) {
-        leftMotor1.set(-left_speed);
-        leftMotor2.set(-left_speed);
-        leftMotor3.set(-left_speed);
-      } else { leftMotor1.set(0);  leftMotor2.set(0);  leftMotor3.set(0); }
-
-      if((int)(right_speed * deadZone) != 0) {
-        rightMotor1.set(right_speed);
-        rightMotor2.set(right_speed);
-        rightMotor3.set(right_speed);
-      } else { rightMotor1.set(0);  rightMotor2.set(0);  rightMotor3.set(0); }
+      leftSpeed = left_speed;
+      rightSpeed = right_speed;
     }
+
+    if((int)(leftSpeed * deadZone) != 0) {
+      leftMotor1.set(leftSpeed);
+      leftMotor2.set(leftSpeed);
+      leftMotor3.set(leftSpeed);
+    } else { leftMotor1.set(0);  leftMotor2.set(0);  leftMotor3.set(0); }
+
+    if((int)(rightSpeed * deadZone) != 0) {
+      rightMotor1.set(rightSpeed);
+      rightMotor2.set(rightSpeed);
+      rightMotor3.set(rightSpeed);
+    } else { rightMotor1.set(0);  rightMotor2.set(0);  rightMotor3.set(0); }
   }
 }
