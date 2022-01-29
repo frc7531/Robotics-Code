@@ -7,6 +7,8 @@
 
 package frc.robot;
 
+import edu.wpi.first.wpilibj.AddressableLED;
+import edu.wpi.first.wpilibj.AddressableLEDBuffer;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -34,11 +36,19 @@ public class Robot extends TimedRobot {
   Joystick leftStick = new Joystick(0);
   Joystick rightStick = new Joystick(1);
 
+  AddressableLED leds = new AddressableLED(0);
+  AddressableLEDBuffer buffer = new AddressableLEDBuffer(158);
+
+  int m_rainbowFirstPixelHue = 0;
+
   private boolean idleMode = false; // false = coast, true = brake
 
   @Override
   public void robotInit() {
-    CameraServer.startAutomaticCapture();
+
+    leds.setLength(buffer.getLength());
+    leds.setData(buffer);
+    leds.start();
 
     if(idleMode) {
       //set drive motors to brake when idle
@@ -62,6 +72,15 @@ public class Robot extends TimedRobot {
   @Override
   public void teleopPeriodic() {
     drive(leftStick.getY(), rightStick.getY(), true, 1000);
+    for(int i = 0; i < buffer.getLength(); i++) {
+      buffer.setHSV(i, i, 50, 50);
+    }
+  }
+
+  @Override
+  public void robotPeriodic() {
+    rainbow();
+    leds.setData(buffer);
   }
 
   /**Custom method to drive the robot in tank drive mode, with square input mode
@@ -70,7 +89,7 @@ public class Robot extends TimedRobot {
    * @param squareInputs Whether or not to square the inputs before driving(makes it easier to control at lower speeds)
    * @param deadZone how big of a dead zone to have on the joysticks, bigger number means smaller, recommended 20
   */
-  public void drive(double left_speed, double right_speed, boolean squareInputs, float deadZone) {
+  private void drive(double left_speed, double right_speed, boolean squareInputs, float deadZone) {
     double leftSquare = Math.copySign(Math.pow(left_speed, 2), left_speed);
     double rightSquare = Math.copySign(Math.pow(right_speed, 2), right_speed);
 
@@ -96,5 +115,20 @@ public class Robot extends TimedRobot {
       rightMotor2.set(rightSpeed);
       rightMotor3.set(rightSpeed);
     } else { rightMotor1.set(0);  rightMotor2.set(0);  rightMotor3.set(0); }
+  }
+
+  private void rainbow() {
+    // For every pixel
+    for (var i = 0; i < buffer.getLength(); i++) {
+      // Calculate the hue - hue is easier for rainbows because the color
+      // shape is a circle so only one value needs to precess
+      final var hue = (m_rainbowFirstPixelHue + (i * 180 / buffer.getLength())) % 180;
+      // Set the value
+      buffer.setHSV(i, hue, 255, 128);
+    }
+    // Increase by to make the rainbow "move"
+    m_rainbowFirstPixelHue += 1;
+    // Check bounds
+    m_rainbowFirstPixelHue %= 180;
   }
 }
