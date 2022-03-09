@@ -9,9 +9,18 @@ package frc.robot;
 
 import edu.wpi.first.wpilibj.AddressableLED;
 import edu.wpi.first.wpilibj.AddressableLEDBuffer;
+import edu.wpi.first.wpilibj.Compressor;
+import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.Joystick;
+import edu.wpi.first.wpilibj.PneumaticsModuleType;
+import edu.wpi.first.wpilibj.Servo;
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import com.ctre.phoenix.*;
+import com.ctre.phoenix.motorcontrol.ControlMode;
+import com.ctre.phoenix.motorcontrol.can.TalonSRX;
+import com.ctre.phoenix.motorcontrol.can.VictorSPX;
 
 import com.revrobotics.REVLibError;
 import com.revrobotics.CANSparkMax;
@@ -33,15 +42,29 @@ public class Robot extends TimedRobot {
   CANSparkMax leftMotor2 = new CANSparkMax(5, MotorType.kBrushless);
   CANSparkMax leftMotor3 = new CANSparkMax(6, MotorType.kBrushless);
 
+  CANSparkMax fieldMotor1 = new CANSparkMax(7, MotorType.kBrushless);
+  CANSparkMax fieldMotor2 = new CANSparkMax(8, MotorType.kBrushless);
+
   Joystick leftStick = new Joystick(0);
   Joystick rightStick = new Joystick(1);
+  Joystick driver2 = new Joystick(2);
 
   AddressableLED leds = new AddressableLED(0);
   AddressableLEDBuffer buffer = new AddressableLEDBuffer(158);
 
-  int m_rainbowFirstPixelHue = 0;
+  Compressor c = new Compressor(9, PneumaticsModuleType.CTREPCM);
+  DoubleSolenoid d1 = new DoubleSolenoid(9, PneumaticsModuleType.CTREPCM, 0, 1);
+  DoubleSolenoid d2 = new DoubleSolenoid(9, PneumaticsModuleType.CTREPCM, 2, 3);
+  DoubleSolenoid d3 = new DoubleSolenoid(9, PneumaticsModuleType.CTREPCM, 4, 5);
+  DoubleSolenoid d4 = new DoubleSolenoid(9, PneumaticsModuleType.CTREPCM, 6, 7);
+
+  Servo s1 = new Servo(1);
+
+  float m_rainbowFirstPixelHue = 0;
 
   private boolean idleMode = false; // false = coast, true = brake
+
+  int color = 0;
 
   @Override
   public void robotInit() {
@@ -71,15 +94,39 @@ public class Robot extends TimedRobot {
 
   @Override
   public void teleopPeriodic() {
+    fieldMotor1.set(driver2.getRawAxis(1) / 2);
+    fieldMotor2.set(-driver2.getRawAxis(1) / 2);
     drive(leftStick.getY(), rightStick.getY(), true, 1000);
-    for(int i = 0; i < buffer.getLength(); i++) {
-      buffer.setHSV(i, i, 50, 50);
-    }
+    if()
   }
 
   @Override
   public void robotPeriodic() {
-    rainbow();
+    if(leftStick.getRawButton(3)) {
+      color = 1;
+    }
+    if(leftStick.getRawButton(4)) {
+      color = 0;
+    }
+    if(leftStick.getRawButton(5)) {
+      color = 2;
+    }
+    
+    switch(color) {
+      case 1:
+      rainbow();
+      break;
+      case 0:
+      for(int i = 0; i < buffer.getLength(); i++) {
+        buffer.setRGB(i, 255, 0, 0);
+      }
+      break;
+      case 2:
+      for(int i = 0; i < buffer.getLength(); i++) {
+        buffer.setRGB(i, 0, 0, 255);
+      }
+      break;
+    }
     leds.setData(buffer);
   }
 
@@ -122,9 +169,9 @@ public class Robot extends TimedRobot {
     for (var i = 0; i < buffer.getLength(); i++) {
       // Calculate the hue - hue is easier for rainbows because the color
       // shape is a circle so only one value needs to precess
-      final var hue = (m_rainbowFirstPixelHue + (i * 180 / buffer.getLength())) % 180;
+      final var hue = (m_rainbowFirstPixelHue + (i * 720 / buffer.getLength())) % 180;
       // Set the value
-      buffer.setHSV(i, hue, 255, 128);
+      buffer.setHSV(i, (int)hue, 255, 128);
     }
     // Increase by to make the rainbow "move"
     m_rainbowFirstPixelHue += 1;
