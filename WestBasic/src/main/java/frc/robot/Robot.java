@@ -52,11 +52,11 @@ public class Robot extends TimedRobot {
   AddressableLED leds = new AddressableLED(0);
   AddressableLEDBuffer buffer = new AddressableLEDBuffer(158);
 
-  Compressor c = new Compressor(9, PneumaticsModuleType.CTREPCM);
-  DoubleSolenoid d1 = new DoubleSolenoid(9, PneumaticsModuleType.CTREPCM, 0, 1);
-  DoubleSolenoid d2 = new DoubleSolenoid(9, PneumaticsModuleType.CTREPCM, 2, 3);
-  DoubleSolenoid d3 = new DoubleSolenoid(9, PneumaticsModuleType.CTREPCM, 4, 5);
-  DoubleSolenoid d4 = new DoubleSolenoid(9, PneumaticsModuleType.CTREPCM, 6, 7);
+  Compressor c = new Compressor(10, PneumaticsModuleType.CTREPCM);
+  DoubleSolenoid d1 = new DoubleSolenoid(10, PneumaticsModuleType.CTREPCM, 0, 1);
+  DoubleSolenoid d2 = new DoubleSolenoid(10, PneumaticsModuleType.CTREPCM, 2, 3);
+  DoubleSolenoid d3 = new DoubleSolenoid(10, PneumaticsModuleType.CTREPCM, 4, 5);
+  DoubleSolenoid d4 = new DoubleSolenoid(10, PneumaticsModuleType.CTREPCM, 6, 7);
 
   Servo s1 = new Servo(1);
 
@@ -90,14 +90,24 @@ public class Robot extends TimedRobot {
       rightMotor2.setIdleMode(IdleMode.kCoast);
       rightMotor3.setIdleMode(IdleMode.kCoast);
     }
+
+    fieldMotor1.setIdleMode(IdleMode.kBrake);
+    fieldMotor2.setIdleMode(IdleMode.kBrake);
   }
 
   @Override
   public void teleopPeriodic() {
     fieldMotor1.set(driver2.getRawAxis(1) / 2);
-    fieldMotor2.set(-driver2.getRawAxis(1) / 2);
+    fieldMotor2.set(driver2.getRawAxis(1) / 2);
     drive(leftStick.getY(), rightStick.getY(), true, 1000);
-    if()
+    if(driver2.getRawButton(5)) d1.set(Value.kForward);
+    if(driver2.getRawButton(6)) d2.set(Value.kReverse);
+    if(driver2.getRawAxis(2) > 0.75) d1.set(Value.kReverse);
+    if(driver2.getRawAxis(3) > 0.75) d2.set(Value.kForward);
+    if(driver2.getPOV() == 0) d4.set(Value.kForward);
+    if(driver2.getPOV() == 180) d4.set(Value.kReverse);
+    if(driver2.getRawButton(4)) d3.set(Value.kForward);
+    if(driver2.getRawButton(1)) d3.set(Value.kReverse);
   }
 
   @Override
