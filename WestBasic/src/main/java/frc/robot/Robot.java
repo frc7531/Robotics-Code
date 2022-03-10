@@ -15,17 +15,25 @@ import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.Servo;
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+
+import java.io.Console;
+
 import com.ctre.phoenix.*;
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 import com.ctre.phoenix.motorcontrol.can.VictorSPX;
 
 import com.revrobotics.REVLibError;
+import com.revrobotics.RelativeEncoder;
+import com.revrobotics.SparkMaxRelativeEncoder;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
+import com.revrobotics.SparkMaxRelativeEncoder.Type;
+
 import edu.wpi.first.cameraserver.CameraServer;
 
 /**
@@ -45,6 +53,8 @@ public class Robot extends TimedRobot {
   CANSparkMax fieldMotor1 = new CANSparkMax(7, MotorType.kBrushless);
   CANSparkMax fieldMotor2 = new CANSparkMax(8, MotorType.kBrushless);
 
+  RelativeEncoder e1 = rightMotor1.getEncoder(Type.kHallSensor, 42);
+
   Joystick leftStick = new Joystick(0);
   Joystick rightStick = new Joystick(1);
   Joystick driver2 = new Joystick(2);
@@ -53,22 +63,34 @@ public class Robot extends TimedRobot {
   AddressableLEDBuffer buffer = new AddressableLEDBuffer(158);
 
   Compressor c = new Compressor(10, PneumaticsModuleType.CTREPCM);
-  DoubleSolenoid d1 = new DoubleSolenoid(10, PneumaticsModuleType.CTREPCM, 0, 1);
-  DoubleSolenoid d2 = new DoubleSolenoid(10, PneumaticsModuleType.CTREPCM, 2, 3);
-  DoubleSolenoid d3 = new DoubleSolenoid(10, PneumaticsModuleType.CTREPCM, 4, 5);
-  DoubleSolenoid d4 = new DoubleSolenoid(10, PneumaticsModuleType.CTREPCM, 6, 7);
+  DoubleSolenoid rightClaw = new DoubleSolenoid(10, PneumaticsModuleType.CTREPCM, 0, 1);
+  DoubleSolenoid leftClaw = new DoubleSolenoid(10, PneumaticsModuleType.CTREPCM, 2, 3);
+  DoubleSolenoid armMain = new DoubleSolenoid(10, PneumaticsModuleType.CTREPCM, 4, 5);
+  DoubleSolenoid armWrist = new DoubleSolenoid(10, PneumaticsModuleType.CTREPCM, 6, 7);
 
   Servo s1 = new Servo(1);
 
   float m_rainbowFirstPixelHue = 0;
 
-  private boolean idleMode = false; // false = coast, true = brake
+  private boolean idleMode = true; // false = coast, true = brake
 
   int color = 0;
 
   @Override
-  public void robotInit() {
+  public void autonomousInit() {
+    e1.setPosition(0);
+  }
 
+  public void autonomousPeriodic() {
+    if(e1.getPosition() > -1) {
+      rightMotor1.set(0.1);
+      rightMotor2.set(0.1);
+      rightMotor3.set(0.1);
+    }
+  }
+
+  @Override
+  public void robotInit() {
     leds.setLength(buffer.getLength());
     leds.setData(buffer);
     leds.start();
@@ -93,6 +115,9 @@ public class Robot extends TimedRobot {
 
     fieldMotor1.setIdleMode(IdleMode.kBrake);
     fieldMotor2.setIdleMode(IdleMode.kBrake);
+
+    //armMain.set(Value.kReverse);
+    //armWrist.set(Value.kForward);
   }
 
   @Override
@@ -100,18 +125,28 @@ public class Robot extends TimedRobot {
     fieldMotor1.set(driver2.getRawAxis(1) / 2);
     fieldMotor2.set(driver2.getRawAxis(1) / 2);
     drive(leftStick.getY(), rightStick.getY(), true, 1000);
-    if(driver2.getRawButton(5)) d1.set(Value.kForward);
-    if(driver2.getRawButton(6)) d2.set(Value.kReverse);
-    if(driver2.getRawAxis(2) > 0.75) d1.set(Value.kReverse);
-    if(driver2.getRawAxis(3) > 0.75) d2.set(Value.kForward);
-    if(driver2.getPOV() == 0) d4.set(Value.kForward);
-    if(driver2.getPOV() == 180) d4.set(Value.kReverse);
-    if(driver2.getRawButton(4)) d3.set(Value.kForward);
-    if(driver2.getRawButton(1)) d3.set(Value.kReverse);
+    if(driver2.getRawButton(6)) rightClaw.set(Value.kReverse);
+    if(driver2.getRawButton(5)) leftClaw.set(Value.kForward);
+    if(driver2.getRawAxis(3) > 0.75) rightClaw.set(Value.kForward);
+    if(driver2.getRawAxis(2) > 0.75) leftClaw.set(Value.kReverse);
+    if(driver2.getPOV() == 0) {
+      armWrist.set(Value.kForward);
+      Timer.delay(1);
+      armMain.set(Value.kReverse);
+      Timer.delay(1);
+      armWrist.set(Value.kReverse);
+    }
+    if(driver2.getPOV() == 180) {
+      armWrist.set(Value.kForward);
+      armMain.set(Value.kForward);
+      Timer.delay(1);
+      armWrist.set(Value.kReverse);
+    }
   }
 
   @Override
   public void robotPeriodic() {
+
     if(leftStick.getRawButton(3)) {
       color = 1;
     }
