@@ -54,6 +54,7 @@ public class Robot extends TimedRobot {
   CANSparkMax fieldMotor2 = new CANSparkMax(8, MotorType.kBrushless);
 
   RelativeEncoder e1 = rightMotor1.getEncoder(Type.kHallSensor, 42);
+  RelativeEncoder e2 = leftMotor1.getEncoder(Type.kHallSensor, 42);
 
   Joystick leftStick = new Joystick(0);
   Joystick rightStick = new Joystick(1);
@@ -79,13 +80,28 @@ public class Robot extends TimedRobot {
   @Override
   public void autonomousInit() {
     e1.setPosition(0);
+    e2.setPosition(0);
   }
 
   public void autonomousPeriodic() {
-    if(e1.getPosition() > -1) {
-      rightMotor1.set(0.1);
-      rightMotor2.set(0.1);
-      rightMotor3.set(0.1);
+    System.out.println(e1.getPosition());
+    if(e1.getPosition() < 10) {
+      rightMotor1.set(0.05);
+      rightMotor2.set(0.05);
+      rightMotor3.set(0.05);
+    } else {
+      rightMotor1.set(0);
+      rightMotor2.set(0);
+      rightMotor3.set(0);
+    }
+    if(e2.getPosition() < 10) {
+      leftMotor1.set(0.05);
+      leftMotor2.set(0.05);
+      leftMotor3.set(0.05);
+    } else {
+      leftMotor1.set(0);
+      leftMotor2.set(0);
+      leftMotor3.set(0);
     }
   }
 
@@ -94,6 +110,10 @@ public class Robot extends TimedRobot {
     leds.setLength(buffer.getLength());
     leds.setData(buffer);
     leds.start();
+
+    rightMotor1.setInverted(true);
+    rightMotor2.setInverted(true);
+    rightMotor3.setInverted(true);
 
     if(idleMode) {
       //set drive motors to brake when idle
@@ -190,7 +210,7 @@ public class Robot extends TimedRobot {
 
     if(squareInputs) {
       leftSpeed = -leftSquare;
-      rightSpeed = rightSquare;
+      rightSpeed = -rightSquare;
     } else {
       leftSpeed = left_speed;
       rightSpeed = right_speed;
@@ -207,6 +227,17 @@ public class Robot extends TimedRobot {
       rightMotor2.set(rightSpeed);
       rightMotor3.set(rightSpeed);
     } else { rightMotor1.set(0);  rightMotor2.set(0);  rightMotor3.set(0); }
+  }
+
+  private void move(double distance, double speed) {
+    boolean state = true;
+    e1.setPosition(0);
+    e2.setPosition(0);
+    while(state) {
+      if(e1.getPosition() < distance) {
+        
+      }
+    }
   }
 
   private void rainbow() {
