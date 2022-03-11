@@ -73,36 +73,22 @@ public class Robot extends TimedRobot {
 
   float m_rainbowFirstPixelHue = 0;
 
-  private boolean idleMode = true; // false = coast, true = brake
+  private boolean idleMode = false; // false = coast, true = brake
 
   int color = 0;
 
   @Override
   public void autonomousInit() {
-    e1.setPosition(0);
-    e2.setPosition(0);
+    leftMotor1.setIdleMode(IdleMode.kBrake);
+    leftMotor2.setIdleMode(IdleMode.kBrake);
+    leftMotor3.setIdleMode(IdleMode.kBrake);
+    rightMotor1.setIdleMode(IdleMode.kBrake);
+    rightMotor2.setIdleMode(IdleMode.kBrake);
+    rightMotor3.setIdleMode(IdleMode.kBrake);
+    System.out.println("Robot took " + moveStraight(10, 0.1, 0.01) + " seconds to move");
   }
 
   public void autonomousPeriodic() {
-    System.out.println(e1.getPosition());
-    if(e1.getPosition() < 10) {
-      rightMotor1.set(0.05);
-      rightMotor2.set(0.05);
-      rightMotor3.set(0.05);
-    } else {
-      rightMotor1.set(0);
-      rightMotor2.set(0);
-      rightMotor3.set(0);
-    }
-    if(e2.getPosition() < 10) {
-      leftMotor1.set(0.05);
-      leftMotor2.set(0.05);
-      leftMotor3.set(0.05);
-    } else {
-      leftMotor1.set(0);
-      leftMotor2.set(0);
-      leftMotor3.set(0);
-    }
   }
 
   @Override
@@ -115,6 +101,15 @@ public class Robot extends TimedRobot {
     rightMotor2.setInverted(true);
     rightMotor3.setInverted(true);
 
+    fieldMotor1.setIdleMode(IdleMode.kBrake);
+    fieldMotor2.setIdleMode(IdleMode.kBrake);
+
+    //armMain.set(Value.kReverse);
+    //armWrist.set(Value.kForward);
+  }
+
+  @Override
+  public void teleopInit() {
     if(idleMode) {
       //set drive motors to brake when idle
       leftMotor1.setIdleMode(IdleMode.kBrake);
@@ -132,12 +127,6 @@ public class Robot extends TimedRobot {
       rightMotor2.setIdleMode(IdleMode.kCoast);
       rightMotor3.setIdleMode(IdleMode.kCoast);
     }
-
-    fieldMotor1.setIdleMode(IdleMode.kBrake);
-    fieldMotor2.setIdleMode(IdleMode.kBrake);
-
-    //armMain.set(Value.kReverse);
-    //armWrist.set(Value.kForward);
   }
 
   @Override
@@ -229,15 +218,52 @@ public class Robot extends TimedRobot {
     } else { rightMotor1.set(0);  rightMotor2.set(0);  rightMotor3.set(0); }
   }
 
-  private void move(double distance, double speed) {
-    boolean state = true;
+  private double moveStraight(double distance, double speed, double precision) {
+    Timer timer = new Timer();
+    timer.reset();
+    timer.start();
+    speed = Math.abs(speed);
+    precision = Math.abs(precision);
+    boolean state1 = true;
+    boolean state2 = true;
     e1.setPosition(0);
     e2.setPosition(0);
-    while(state) {
-      if(e1.getPosition() < distance) {
-        
+    while(state1 || state2) {
+      if(e1.getPosition() < distance - precision) {
+        state1 = true;
+        rightMotor1.set(speed);
+        rightMotor2.set(speed);
+        rightMotor3.set(speed);
+      } else if(e1.getPosition() > distance + precision) {
+        state1 = true;
+        rightMotor1.set(-speed);
+        rightMotor2.set(-speed);
+        rightMotor3.set(-speed);
+      } else {
+        rightMotor1.set(0);
+        rightMotor2.set(0);
+        rightMotor3.set(0);
+        state1 = false;
+      }
+      if(e2.getPosition() < distance - precision) {
+        state2 = true;
+        leftMotor1.set(speed);
+        leftMotor2.set(speed);
+        leftMotor3.set(speed);
+      } else if(e1.getPosition() > distance + precision) {
+        state2 = true;
+        leftMotor1.set(-speed);
+        leftMotor2.set(-speed);
+        leftMotor3.set(-speed);
+      } else {
+        leftMotor1.set(0);
+        leftMotor2.set(0);
+        leftMotor3.set(0);
+        state2 = false;
       }
     }
+    timer.stop();
+    return timer.get();
   }
 
   private void rainbow() {
