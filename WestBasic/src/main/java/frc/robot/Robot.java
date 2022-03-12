@@ -70,14 +70,19 @@ public class Robot extends TimedRobot {
   /**This code runs once when the robot initializes */
   @Override
   public void robotInit() {
+    //sets up things to do with the LEDs
     leds.setLength(buffer.getLength());
     leds.setData(buffer);
     leds.start();
 
+    //invert the right motors because they are facing the other direction
     rightMotor1.setInverted(true);
     rightMotor2.setInverted(true);
     rightMotor3.setInverted(true);
 
+    //set the idle mode of the winch motors to brake, keeps it more steady
+    //could add an automatic steady system with the encoders to make it stay in exactly the same place
+    //actually wouldn't be that hard, requires further testing
     fieldMotor1.setIdleMode(IdleMode.kBrake);
     fieldMotor2.setIdleMode(IdleMode.kBrake);
 
