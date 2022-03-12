@@ -61,7 +61,7 @@ public class Robot extends TimedRobot {
   Joystick driver2 = new Joystick(2);
 
   AddressableLED leds = new AddressableLED(0);
-  AddressableLEDBuffer buffer = new AddressableLEDBuffer(158);
+  AddressableLEDBuffer buffer = new AddressableLEDBuffer(164);
 
   Compressor c = new Compressor(10, PneumaticsModuleType.CTREPCM);
   DoubleSolenoid rightClaw = new DoubleSolenoid(10, PneumaticsModuleType.CTREPCM, 0, 1);
@@ -85,7 +85,8 @@ public class Robot extends TimedRobot {
     rightMotor1.setIdleMode(IdleMode.kBrake);
     rightMotor2.setIdleMode(IdleMode.kBrake);
     rightMotor3.setIdleMode(IdleMode.kBrake);
-    System.out.println("Robot took " + moveStraight(10, 0.1, 0.01) + " seconds to move");
+    moveStraight(10, 0.1, 0.1);
+    //rotate(90, 0.1);
   }
 
   public void autonomousPeriodic() {
@@ -93,6 +94,7 @@ public class Robot extends TimedRobot {
 
   @Override
   public void robotInit() {
+
     leds.setLength(buffer.getLength());
     leds.setData(buffer);
     leds.start();
@@ -151,6 +153,32 @@ public class Robot extends TimedRobot {
       Timer.delay(1);
       armWrist.set(Value.kReverse);
     }
+    if(driver2.getRawButton(4)) {
+      armWrist.set(Value.kForward);
+    }
+    if(driver2.getRawButton(1)) {
+      armWrist.set(Value.kReverse);
+    }
+    if(driver2.getPOV() == 90) {
+      armMain.set(Value.kReverse);
+    }
+    if(driver2.getPOV() == 270) {
+      armMain.set(Value.kForward);
+    }
+    if(leftStick.getTriggerPressed()) {
+      if(leftClaw.get() == Value.kForward) {
+        leftClaw.set(Value.kReverse);
+      } else {
+        leftClaw.set(Value.kForward);
+      }
+    }
+    if(rightStick.getTriggerPressed()) {
+      if(rightClaw.get() == Value.kForward) {
+        rightClaw.set(Value.kReverse);
+      } else {
+        rightClaw.set(Value.kForward);
+      }
+    }
   }
 
   @Override
@@ -165,6 +193,9 @@ public class Robot extends TimedRobot {
     if(leftStick.getRawButton(5)) {
       color = 2;
     }
+    if(leftStick.getRawButton(6)) {
+      color = 3;
+    }
     
     switch(color) {
       case 1:
@@ -178,6 +209,11 @@ public class Robot extends TimedRobot {
       case 2:
       for(int i = 0; i < buffer.getLength(); i++) {
         buffer.setRGB(i, 0, 0, 255);
+      }
+      break;
+      case 3:
+      for(int i = 0; i < buffer.getLength(); i++) {
+        buffer.setRGB(i, 0, 0, 0);
       }
       break;
     }
@@ -219,42 +255,83 @@ public class Robot extends TimedRobot {
   }
 
   private double moveStraight(double distance, double speed, double precision) {
+    return move(distance, distance, speed, precision);
+  }
+
+  private double rotate(double degrees, double speed) {
+    return move(degrees * Math.PI / 180 * 11.375, degrees * Math.PI / -180 * 11.375, speed, 0.1);
+  }
+
+  private double move(double leftDistance, double rightDistance, double speed, double precision) {
+    double speed2 = speed;
     Timer timer = new Timer();
     timer.reset();
     timer.start();
     speed = Math.abs(speed);
     precision = Math.abs(precision);
-    boolean state1 = true;
-    boolean state2 = true;
     e1.setPosition(0);
     e2.setPosition(0);
+    if(speed > 0.1) {
+      speed2 = 0.1;
+      while(Math.abs(e1.getPosition() - rightDistance) > 5 || Math.abs(e2.getPosition() - leftDistance) > 5) {
+        if(e1.getPosition() < rightDistance - 4) {
+          rightMotor1.set(speed);
+          rightMotor2.set(speed);
+          rightMotor3.set(speed);
+        } else if(e1.getPosition() > rightDistance + 4) {
+          rightMotor1.set(-speed);
+          rightMotor2.set(-speed);
+          rightMotor3.set(-speed);
+        } else {
+          rightMotor1.set(0);
+          rightMotor2.set(0);
+          rightMotor3.set(0);
+        }
+        if(e2.getPosition() < leftDistance - 4) {
+          leftMotor1.set(speed);
+          leftMotor2.set(speed);
+          leftMotor3.set(speed);
+        } else if(e1.getPosition() > leftDistance + 4) {
+          leftMotor1.set(-speed);
+          leftMotor2.set(-speed);
+          leftMotor3.set(-speed);
+        } else {
+          leftMotor1.set(0);
+          leftMotor2.set(0);
+          leftMotor3.set(0);
+        }
+      }
+    }
+    //precision movement
+    boolean state1 = true;
+    boolean state2 = true;
     while(state1 || state2) {
-      if(e1.getPosition() < distance - precision) {
+      if(e1.getPosition() < rightDistance - precision) {
         state1 = true;
-        rightMotor1.set(speed);
-        rightMotor2.set(speed);
-        rightMotor3.set(speed);
-      } else if(e1.getPosition() > distance + precision) {
+        rightMotor1.set(speed2);
+        rightMotor2.set(speed2);
+        rightMotor3.set(speed2);
+      } else if(e1.getPosition() > rightDistance + precision) {
         state1 = true;
-        rightMotor1.set(-speed);
-        rightMotor2.set(-speed);
-        rightMotor3.set(-speed);
+        rightMotor1.set(-speed2);
+        rightMotor2.set(-speed2);
+        rightMotor3.set(-speed2);
       } else {
         rightMotor1.set(0);
         rightMotor2.set(0);
         rightMotor3.set(0);
         state1 = false;
       }
-      if(e2.getPosition() < distance - precision) {
+      if(e2.getPosition() < leftDistance - precision) {
         state2 = true;
-        leftMotor1.set(speed);
-        leftMotor2.set(speed);
-        leftMotor3.set(speed);
-      } else if(e1.getPosition() > distance + precision) {
+        leftMotor1.set(speed2);
+        leftMotor2.set(speed2);
+        leftMotor3.set(speed2);
+      } else if(e1.getPosition() > leftDistance + precision) {
         state2 = true;
-        leftMotor1.set(-speed);
-        leftMotor2.set(-speed);
-        leftMotor3.set(-speed);
+        leftMotor1.set(-speed2);
+        leftMotor2.set(-speed2);
+        leftMotor3.set(-speed2);
       } else {
         leftMotor1.set(0);
         leftMotor2.set(0);
