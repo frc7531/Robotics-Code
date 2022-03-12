@@ -5,84 +5,71 @@
 /* the project.                                                               */
 /*----------------------------------------------------------------------------*/
 
+//Robot package
 package frc.robot;
-
+//WPILIB imports
 import edu.wpi.first.wpilibj.AddressableLED;
 import edu.wpi.first.wpilibj.AddressableLEDBuffer;
 import edu.wpi.first.wpilibj.Compressor;
 import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
-import edu.wpi.first.wpilibj.Servo;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
-
+//REV imports
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 import com.revrobotics.SparkMaxRelativeEncoder.Type;
-
-/**
- * This is a demo program showing the use of the CANSparkMax class, specifically
- * it contains the code necessary to operate a robot with tank drive.
- */
+//all the code really goes in here
 public class Robot extends TimedRobot {
+  //Create objects for each of the motors, all SparkMAX's
+  private CANSparkMax rightMotor1 = new CANSparkMax(1, MotorType.kBrushless);
+  private CANSparkMax rightMotor2 = new CANSparkMax(2, MotorType.kBrushless);
+  private CANSparkMax rightMotor3 = new CANSparkMax(3, MotorType.kBrushless);
+  private CANSparkMax leftMotor1 = new CANSparkMax(4, MotorType.kBrushless);
+  private CANSparkMax leftMotor2 = new CANSparkMax(5, MotorType.kBrushless);
+  private CANSparkMax leftMotor3 = new CANSparkMax(6, MotorType.kBrushless);
+  private CANSparkMax fieldMotor1 = new CANSparkMax(7, MotorType.kBrushless);
+  private CANSparkMax fieldMotor2 = new CANSparkMax(8, MotorType.kBrushless);
+  //Create objects for the encoders on two of the motors -
+  //We only need one encoder from each side of the robot,
+  //because all the motors on one side are chained together
+  private RelativeEncoder e1 = rightMotor1.getEncoder(Type.kHallSensor, 42);
+  private RelativeEncoder e2 = leftMotor1.getEncoder(Type.kHallSensor, 42);
+  //Create Joystick objects for drivers 1 and 2
+  private Joystick leftStick = new Joystick(0);
+  private Joystick rightStick = new Joystick(1);
+  private Joystick driver2 = new Joystick(2);
+  //Create LED objects for the LED strip on the bottom of the robot
+  private AddressableLED leds = new AddressableLED(0);
+  private AddressableLEDBuffer buffer = new AddressableLEDBuffer(164);
+  //Create pneumatics objects
+  protected Compressor c = new Compressor(10, PneumaticsModuleType.CTREPCM);
+  private DoubleSolenoid rightClaw = new DoubleSolenoid(10, PneumaticsModuleType.CTREPCM, 0, 1);
+  private DoubleSolenoid leftClaw = new DoubleSolenoid(10, PneumaticsModuleType.CTREPCM, 2, 3);
+  private DoubleSolenoid armMain = new DoubleSolenoid(10, PneumaticsModuleType.CTREPCM, 4, 5);
+  private DoubleSolenoid armWrist = new DoubleSolenoid(10, PneumaticsModuleType.CTREPCM, 6, 7);
 
-  CANSparkMax rightMotor1 = new CANSparkMax(1, MotorType.kBrushless);
-  CANSparkMax rightMotor2 = new CANSparkMax(2, MotorType.kBrushless);
-  CANSparkMax rightMotor3 = new CANSparkMax(3, MotorType.kBrushless);
-  
-  CANSparkMax leftMotor1 = new CANSparkMax(4, MotorType.kBrushless);
-  CANSparkMax leftMotor2 = new CANSparkMax(5, MotorType.kBrushless);
-  CANSparkMax leftMotor3 = new CANSparkMax(6, MotorType.kBrushless);
-
-  CANSparkMax fieldMotor1 = new CANSparkMax(7, MotorType.kBrushless);
-  CANSparkMax fieldMotor2 = new CANSparkMax(8, MotorType.kBrushless);
-
-  RelativeEncoder e1 = rightMotor1.getEncoder(Type.kHallSensor, 42);
-  RelativeEncoder e2 = leftMotor1.getEncoder(Type.kHallSensor, 42);
-
-  Joystick leftStick = new Joystick(0);
-  Joystick rightStick = new Joystick(1);
-  Joystick driver2 = new Joystick(2);
-
-  AddressableLED leds = new AddressableLED(0);
-  AddressableLEDBuffer buffer = new AddressableLEDBuffer(164);
-
-  Compressor c = new Compressor(10, PneumaticsModuleType.CTREPCM);
-  DoubleSolenoid rightClaw = new DoubleSolenoid(10, PneumaticsModuleType.CTREPCM, 0, 1);
-  DoubleSolenoid leftClaw = new DoubleSolenoid(10, PneumaticsModuleType.CTREPCM, 2, 3);
-  DoubleSolenoid armMain = new DoubleSolenoid(10, PneumaticsModuleType.CTREPCM, 4, 5);
-  DoubleSolenoid armWrist = new DoubleSolenoid(10, PneumaticsModuleType.CTREPCM, 6, 7);
-
-  Servo s1 = new Servo(1);
-
-  float m_rainbowFirstPixelHue = 0;
-
+  //start hue color of rainbow LEDs
+  private float m_rainbowFirstPixelHue = 0;
+  //The mode when the motors are idle, either coast or brake
   private boolean idleMode = false; // false = coast, true = brake
-
-  int color = 0;
-
-  @Override
-  public void autonomousInit() {
-    leftMotor1.setIdleMode(IdleMode.kBrake);
-    leftMotor2.setIdleMode(IdleMode.kBrake);
-    leftMotor3.setIdleMode(IdleMode.kBrake);
-    rightMotor1.setIdleMode(IdleMode.kBrake);
-    rightMotor2.setIdleMode(IdleMode.kBrake);
-    rightMotor3.setIdleMode(IdleMode.kBrake);
-    moveStraight(10, 0.1, 0.1);
-    rotate(90, 0.1);
+  //The current color mode of the LED strips
+  private enum Color {
+    red,
+    blue,
+    rainbow,
+    off
   }
 
-  public void autonomousPeriodic() {
-  }
+  Color color;
 
+  /**This code runs once when the robot initializes */
   @Override
   public void robotInit() {
-
     leds.setLength(buffer.getLength());
     leds.setData(buffer);
     leds.start();
@@ -98,10 +85,57 @@ public class Robot extends TimedRobot {
     //armWrist.set(Value.kForward);
   }
 
+  /**Code that runs repeatedly whenever the robot is on and connected
+   * All this code does is to update the LED strip while the robot is disabled
+   */
+  @Override
+  public void robotPeriodic() {
+    switch(color) {
+      case rainbow:
+      rainbow();
+      break;
+      case red:
+      for(int i = 0; i < buffer.getLength(); i++)
+        buffer.setRGB(i, 255, 0, 0);
+      break;
+      case blue:
+      for(int i = 0; i < buffer.getLength(); i++)
+        buffer.setRGB(i, 0, 0, 255);
+      break;
+      case off:
+      for(int i = 0; i < buffer.getLength(); i++)
+        buffer.setRGB(i, 0, 0, 0);
+      break;
+    }
+    leds.setData(buffer);
+  }
+
+  /**This code runs once when the autonomous period starts */
+  @Override
+  public void autonomousInit() {
+    //motors braking in autonomous is much more accurate
+    leftMotor1.setIdleMode(IdleMode.kBrake);
+    leftMotor2.setIdleMode(IdleMode.kBrake);
+    leftMotor3.setIdleMode(IdleMode.kBrake);
+    rightMotor1.setIdleMode(IdleMode.kBrake);
+    rightMotor2.setIdleMode(IdleMode.kBrake);
+    rightMotor3.setIdleMode(IdleMode.kBrake);
+    //example autonomous code, does nothing yet
+    moveStraight(10, 0.1, 0.1);
+    rotate(90, 0.1);
+  }
+
+  /**This code runs repeatedly when the autonomous period is active */
+  @Override
+  public void autonomousPeriodic() {
+    //nothing at the moment
+  }
+
+  /**Code that runs once when the teleop period starts */
   @Override
   public void teleopInit() {
+    //sets the drive motors to either brake or coast when idle
     if(idleMode) {
-      //set drive motors to brake when idle
       leftMotor1.setIdleMode(IdleMode.kBrake);
       leftMotor2.setIdleMode(IdleMode.kBrake);
       leftMotor3.setIdleMode(IdleMode.kBrake);
@@ -109,7 +143,6 @@ public class Robot extends TimedRobot {
       rightMotor2.setIdleMode(IdleMode.kBrake);
       rightMotor3.setIdleMode(IdleMode.kBrake);
     } else {
-      //set drive motors to coast when idle
       leftMotor1.setIdleMode(IdleMode.kCoast);
       leftMotor2.setIdleMode(IdleMode.kCoast);
       leftMotor3.setIdleMode(IdleMode.kCoast);
@@ -119,40 +152,23 @@ public class Robot extends TimedRobot {
     }
   }
 
+  /**Code that runs repeatedly when the teleop period is active */
   @Override
   public void teleopPeriodic() {
+    //sets winch motors to the Y axis of Driver 2's left thumb stick
     fieldMotor1.set(driver2.getRawAxis(1) / 2);
     fieldMotor2.set(driver2.getRawAxis(1) / 2);
+    //controls the drive motors and optionally squares the inputs
     drive(leftStick.getY(), rightStick.getY(), true, 1000);
+
+    //all the inputs connected to some action
+    //control the opening and closing of the claws
+    //driver 2 control
     if(driver2.getRawButton(6)) rightClaw.set(Value.kReverse);
     if(driver2.getRawButton(5)) leftClaw.set(Value.kForward);
     if(driver2.getRawAxis(3) > 0.75) rightClaw.set(Value.kForward);
     if(driver2.getRawAxis(2) > 0.75) leftClaw.set(Value.kReverse);
-    if(driver2.getPOV() == 0) {
-      armWrist.set(Value.kForward);
-      Timer.delay(1);
-      armMain.set(Value.kReverse);
-      Timer.delay(1);
-      armWrist.set(Value.kReverse);
-    }
-    if(driver2.getPOV() == 180) {
-      armWrist.set(Value.kForward);
-      armMain.set(Value.kForward);
-      Timer.delay(1);
-      armWrist.set(Value.kReverse);
-    }
-    if(driver2.getRawButton(4)) {
-      armWrist.set(Value.kForward);
-    }
-    if(driver2.getRawButton(1)) {
-      armWrist.set(Value.kReverse);
-    }
-    if(driver2.getPOV() == 90) {
-      armMain.set(Value.kReverse);
-    }
-    if(driver2.getPOV() == 270) {
-      armMain.set(Value.kForward);
-    }
+    //driver 1 control
     if(leftStick.getTriggerPressed()) {
       if(leftClaw.get() == Value.kForward) {
         leftClaw.set(Value.kReverse);
@@ -167,45 +183,31 @@ public class Robot extends TimedRobot {
         rightClaw.set(Value.kForward);
       }
     }
-  }
-
-  @Override
-  public void robotPeriodic() {
-
-    if(leftStick.getRawButton(3)) {
-      color = 1;
+    //controls the up-and-down movement of the claw arm as a whole, with added timings to ensure legality
+    if(driver2.getPOV() == 0) {
+      armWrist.set(Value.kForward);
+      Timer.delay(1);
+      armMain.set(Value.kReverse);
+      Timer.delay(1);
+      armWrist.set(Value.kReverse);
     }
-    if(leftStick.getRawButton(4)) {
-      color = 0;
+    if(driver2.getPOV() == 180) {
+      armWrist.set(Value.kForward);
+      armMain.set(Value.kForward);
+      Timer.delay(1);
+      armWrist.set(Value.kReverse);
     }
-    if(leftStick.getRawButton(5)) {
-      color = 2;
-    }
-    if(leftStick.getRawButton(6)) {
-      color = 3;
-    }
-    
-    switch(color) {
-      case 1:
-      rainbow();
-      break;
-      case 0:
-      for(int i = 0; i < buffer.getLength(); i++) {
-        buffer.setRGB(i, 255, 0, 0);
-      }
-      break;
-      case 2:
-      for(int i = 0; i < buffer.getLength(); i++) {
-        buffer.setRGB(i, 0, 0, 255);
-      }
-      break;
-      case 3:
-      for(int i = 0; i < buffer.getLength(); i++) {
-        buffer.setRGB(i, 0, 0, 0);
-      }
-      break;
-    }
-    leds.setData(buffer);
+    //manual control of the main arm joint
+    if(driver2.getPOV() == 90) armMain.set(Value.kReverse);
+    if(driver2.getPOV() == 270) armMain.set(Value.kForward);
+    //manual control of the wrist joint
+    if(driver2.getRawButton(4)) armWrist.set(Value.kForward);
+    if(driver2.getRawButton(1)) armWrist.set(Value.kReverse);
+    //change the color of the LEDs, between red, blue, rainbow, and off
+    if(leftStick.getRawButton(3)) color = Color.red;
+    if(leftStick.getRawButton(4)) color = Color.rainbow;
+    if(leftStick.getRawButton(5)) color = Color.blue;
+    if(leftStick.getRawButton(6)) color = Color.off;
   }
 
   /**Custom method to drive the robot in tank drive mode, with square input mode
@@ -215,6 +217,8 @@ public class Robot extends TimedRobot {
    * @param deadZone how big of a dead zone to have on the joysticks, bigger number means smaller, recommended 20
   */
   private void drive(double left_speed, double right_speed, boolean squareInputs, float deadZone) {
+    //look into if you really want to, but I'll warn you; it's pretty complicated
+    //(not as complicated as the move method, however);
     double leftSquare = Math.copySign(Math.pow(left_speed, 2), left_speed);
     double rightSquare = Math.copySign(Math.pow(right_speed, 2), right_speed);
 
@@ -242,14 +246,32 @@ public class Robot extends TimedRobot {
     } else { rightMotor1.set(0);  rightMotor2.set(0);  rightMotor3.set(0); }
   }
 
+  /**Extension of the move() method, except there is only need to input one distance
+   * @param distance The distance for the robot to travel
+   * @param speed The speed to move at
+   * @param precision The distance to be acceptable to be off by - WARNING - set this value higher than 0.5
+   * @return the time (in seconds) to complete the move
+   */
   private double moveStraight(double distance, double speed, double precision) {
     return move(distance, distance, speed, precision);
   }
 
+  /**Extension of the move() method, except specifically for rotating a specific number of degrees
+   * @param degrees The degree value to rotate
+   * @param speed the speed to complete the rotation - higher values will be less accurate
+   * @return the time (in seconds) to complete the rotation
+   */
   private double rotate(double degrees, double speed) {
-    return move(degrees * Math.PI / 180 * 11.375, degrees * Math.PI / -180 * 11.375, speed, 0.1);
+    return move(degrees * Math.PI / 180 * 11.375, degrees * Math.PI / -180 * 11.375, speed, 0.5);
   }
 
+  /**A method for moving accurate distances due to the encoders on the SparkMAX motor controllers - not the best method
+   * @param leftDistance The distance to move on the left side
+   * @param rightDistance The distance to move on the right side
+   * @param speed The speed to move the motors
+   * @param precision The distance to be acceptable to be off by - WARNING - set this value higher than 0.5
+   * @return the time (in seconds) to complete the move
+   */
   private double move(double leftDistance, double rightDistance, double speed, double precision) {
     double speed2 = speed;
     Timer timer = new Timer();
@@ -331,6 +353,7 @@ public class Robot extends TimedRobot {
     return timer.get();
   }
 
+  /**Custom method to create rainbow effect for LED strip - must be called repeatedly */
   private void rainbow() {
     // For every pixel
     for (var i = 0; i < buffer.getLength(); i++) {
