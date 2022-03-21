@@ -52,11 +52,14 @@ public class Robot extends TimedRobot {
   private DoubleSolenoid leftClaw = new DoubleSolenoid(10, PneumaticsModuleType.CTREPCM, 2, 3);
   private DoubleSolenoid armMain = new DoubleSolenoid(10, PneumaticsModuleType.CTREPCM, 4, 5);
   private DoubleSolenoid armWrist = new DoubleSolenoid(10, PneumaticsModuleType.CTREPCM, 6, 7);
+  private DoubleSolenoid flag = new DoubleSolenoid(11, PneumaticsModuleType.CTREPCM, 0, 1);
 
   //start hue color of rainbow LEDs
   private float m_rainbowFirstPixelHue = 0;
   //The mode when the motors are idle, either coast or brake
   private boolean idleMode = false; // false = coast, true = brake
+
+  private double speedModifier;
   //The current color mode of the LED strips
   private enum Color {
     red,
@@ -65,7 +68,7 @@ public class Robot extends TimedRobot {
     off
   }
 
-  Color color;
+  Color color = Color.off;
 
   /**This code runs once when the robot initializes */
   @Override
@@ -74,6 +77,9 @@ public class Robot extends TimedRobot {
     leds.setLength(buffer.getLength());
     leds.setData(buffer);
     leds.start();
+
+    e1.setPositionConversionFactor(3.35);
+    e2.setPositionConversionFactor(3.35);
 
     //invert the right motors because they are facing the other direction
     rightMotor1.setInverted(true);
@@ -118,6 +124,7 @@ public class Robot extends TimedRobot {
   /**This code runs once when the autonomous period starts */
   @Override
   public void autonomousInit() {
+    color = Color.rainbow;
     //motors braking in autonomous is much more accurate
     leftMotor1.setIdleMode(IdleMode.kBrake);
     leftMotor2.setIdleMode(IdleMode.kBrake);
@@ -125,9 +132,16 @@ public class Robot extends TimedRobot {
     rightMotor1.setIdleMode(IdleMode.kBrake);
     rightMotor2.setIdleMode(IdleMode.kBrake);
     rightMotor3.setIdleMode(IdleMode.kBrake);
-    //example autonomous code, does nothing yet
-    moveStraight(10, 0.1, 0.1);
-    rotate(90, 0.1);
+    
+    flag.set(Value.kForward);
+    armWrist.set(Value.kReverse);
+    Timer.delay(0.125);
+    leftClaw.set(Value.kForward);
+    rightClaw.set(Value.kReverse);
+    Timer.delay(1);
+
+    moveStraight(-96, 0.1, 0.1);
+    flag.set(Value.kReverse);
   }
 
   /**This code runs repeatedly when the autonomous period is active */
@@ -140,6 +154,7 @@ public class Robot extends TimedRobot {
   @Override
   public void teleopInit() {
     //sets the drive motors to either brake or coast when idle
+    flag.set(Value.kForward);
     if(idleMode) {
       leftMotor1.setIdleMode(IdleMode.kBrake);
       leftMotor2.setIdleMode(IdleMode.kBrake);
@@ -155,17 +170,23 @@ public class Robot extends TimedRobot {
       rightMotor2.setIdleMode(IdleMode.kCoast);
       rightMotor3.setIdleMode(IdleMode.kCoast);
     }
+    color = Color.red;
+    
+    armMain.set(Value.kForward);
   }
 
   /**Code that runs repeatedly when the teleop period is active */
   @Override
   public void teleopPeriodic() {
     //sets winch motors to the Y axis of Driver 2's left thumb stick
-    fieldMotor1.set(driver2.getRawAxis(1) / 2);
-    fieldMotor2.set(driver2.getRawAxis(1) / 2);
+    fieldMotor1.set(Math.copySign(Math.pow(driver2.getRawAxis(1) * 3 / 4, 2), -driver2.getRawAxis(1)));
+    fieldMotor2.set(Math.copySign(Math.pow(driver2.getRawAxis(1) * 3 / 4, 2), -driver2.getRawAxis(1)));
     //controls the drive motors and optionally squares the inputs
-    drive(leftStick.getY(), rightStick.getY(), true, 1000);
+    drive(leftStick.getY() * speedModifier, rightStick.getY() * speedModifier, true, 1000);
 
+    if(rightStick.getRawButton(2)) speedModifier = 0.5;
+    else if(leftStick.getRawButton(2)) speedModifier = 1.0;
+    else speedModifier = 2.0/3.0;
     //all the inputs connected to some action
     //control the opening and closing of the claws
     //driver 2 control
@@ -188,23 +209,9 @@ public class Robot extends TimedRobot {
         rightClaw.set(Value.kForward);
       }
     }
-    //controls the up-and-down movement of the claw arm as a whole, with added timings to ensure legality
-    if(driver2.getPOV() == 0) {
-      armWrist.set(Value.kForward);
-      Timer.delay(1);
-      armMain.set(Value.kReverse);
-      Timer.delay(1);
-      armWrist.set(Value.kReverse);
-    }
-    if(driver2.getPOV() == 180) {
-      armWrist.set(Value.kForward);
-      armMain.set(Value.kForward);
-      Timer.delay(1);
-      armWrist.set(Value.kReverse);
-    }
-    //manual control of the main arm joint
-    if(driver2.getPOV() == 90) armMain.set(Value.kReverse);
-    if(driver2.getPOV() == 270) armMain.set(Value.kForward);
+
+    if(driver2.getPOV() == 0) armMain.set(Value.kReverse);
+    if(driver2.getPOV() == 180) armMain.set(Value.kForward);
     //manual control of the wrist joint
     if(driver2.getRawButton(4)) armWrist.set(Value.kForward);
     if(driver2.getRawButton(1)) armWrist.set(Value.kReverse);
@@ -213,6 +220,11 @@ public class Robot extends TimedRobot {
     if(leftStick.getRawButton(4)) color = Color.rainbow;
     if(leftStick.getRawButton(5)) color = Color.blue;
     if(leftStick.getRawButton(6)) color = Color.off;
+  }
+
+  public void disabledInit() {
+    color = Color.off;
+    flag.set(Value.kReverse);
   }
 
   /**Custom method to drive the robot in tank drive mode, with square input mode
@@ -364,12 +376,12 @@ public class Robot extends TimedRobot {
     for (var i = 0; i < buffer.getLength(); i++) {
       // Calculate the hue - hue is easier for rainbows because the color
       // shape is a circle so only one value needs to precess
-      final var hue = (m_rainbowFirstPixelHue + (i * 720 / buffer.getLength())) % 180;
+      final var hue = (m_rainbowFirstPixelHue + (i * 360 / buffer.getLength())) % 180;
       // Set the value
       buffer.setHSV(i, (int)hue, 255, 128);
     }
     // Increase by to make the rainbow "move"
-    m_rainbowFirstPixelHue += 1;
+    m_rainbowFirstPixelHue += 2;
     // Check bounds
     m_rainbowFirstPixelHue %= 180;
   }
