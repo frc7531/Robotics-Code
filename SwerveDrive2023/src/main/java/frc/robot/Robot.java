@@ -22,8 +22,7 @@ public class Robot extends TimedRobot {
 
   Joystick controller;
 
-  @Override
-  public void robotInit() {
+  @Override public void robotInit() {
     translations = new Translation2d[] {
       new Translation2d(-0.5, 0.5),
       new Translation2d(0.5, 0.5),
@@ -56,32 +55,15 @@ public class Robot extends TimedRobot {
 
     controller = new Joystick(0);
   }
-  @Override
-  public void robotPeriodic() {
+  @Override public void robotPeriodic() {}
+  @Override public void autonomousInit() {}
+  @Override public void autonomousPeriodic() {}
+  @Override public void teleopInit() {}
 
-  }
-  @Override
-  public void autonomousInit() {
-
-  }
-  @Override
-  public void autonomousPeriodic() {
-
-  }
-  @Override
-  public void teleopInit() {
-
-  }
-  @Override
-  public void teleopPeriodic() {
+  @Override public void teleopPeriodic() {
     swerve.drive(new ChassisSpeeds(controller.getRawAxis(0), controller.getRawAxis(1), controller.getRawAxis(3)), 1, 5);
   }
-  @Override
-  public void disabledInit() {
 
-  }
-  @Override
-  public void disabledPeriodic() {
-
-  }
+  @Override public void disabledInit() {}
+  @Override public void disabledPeriodic() {}
 }
