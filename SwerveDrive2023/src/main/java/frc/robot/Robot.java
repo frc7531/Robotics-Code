@@ -14,78 +14,74 @@ import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
 public class Robot extends TimedRobot {
   CANSparkMax[] motors;
+  Translation2d[] translations;
+  DutyCycleEncoder[] encoders;
+  MotorGroup[] motorGroups;
+  SwerveDriveKinematics sdk;
+  SwerveDrive swerve;
 
-  Translation2d frontLeftModule = new Translation2d(-5, 5);
-  Translation2d frontRightModule = new Translation2d(5, 5);
-  Translation2d rearRightModule = new Translation2d(5, -5);
-  Translation2d rearLeftModule = new Translation2d(-5, -5);
-  DutyCycleEncoder frontLeftEncoder = new DutyCycleEncoder(0);
-  SwerveDriveKinematics sdk = new SwerveDriveKinematics(frontLeftModule, frontRightModule, rearRightModule, rearLeftModule);
-
-  Joystick controller = new Joystick(0);
+  Joystick controller;
 
   @Override
   public void robotInit() {
-    frontLeftEncoder.setConnectedFrequencyThreshold(900);
-    for(int i = 0; i < 8; i++) {
-      motors[i] = new CANSparkMax(i + 1, MotorType.kBrushless);
+    translations = new Translation2d[] {
+      new Translation2d(-0.5, 0.5),
+      new Translation2d(0.5, 0.5),
+      new Translation2d(0.5, -0.5),
+      new Translation2d(-0.5, -0.5)
+    };
+    motors = new CANSparkMax[] {
+      new CANSparkMax(0, MotorType.kBrushless),
+      new CANSparkMax(1, MotorType.kBrushless),
+      new CANSparkMax(2, MotorType.kBrushless),
+      new CANSparkMax(3, MotorType.kBrushless),
+      new CANSparkMax(4, MotorType.kBrushless),
+      new CANSparkMax(5, MotorType.kBrushless),
+      new CANSparkMax(6, MotorType.kBrushless),
+      new CANSparkMax(7, MotorType.kBrushless),
+      new CANSparkMax(8, MotorType.kBrushless)
+    };
+    encoders = new DutyCycleEncoder[] {
+      new DutyCycleEncoder(0),
+      new DutyCycleEncoder(1),
+      new DutyCycleEncoder(2),
+      new DutyCycleEncoder(3)
+    };
+    motorGroups = new MotorGroup[4];
+    for(int i = 0; i < 4; i++) {
+      motorGroups[i] = new MotorGroup(motors[i], motors[i + 1], encoders[i]);
     }
-  }
+    sdk = new SwerveDriveKinematics(translations);
+    swerve = new SwerveDrive(motorGroups, sdk);
 
+    controller = new Joystick(0);
+  }
   @Override
   public void robotPeriodic() {
 
   }
-
   @Override
   public void autonomousInit() {
 
   }
-
   @Override
   public void autonomousPeriodic() {
 
   }
-
   @Override
   public void teleopInit() {
 
   }
-
   @Override
   public void teleopPeriodic() {
-    swerveDrive(new ChassisSpeeds(controller.getRawAxis(0), controller.getRawAxis(1), controller.getRawAxis(2)));
+    swerve.drive(new ChassisSpeeds(controller.getRawAxis(0), controller.getRawAxis(1), controller.getRawAxis(3)), 1, 5);
   }
-
   @Override
   public void disabledInit() {
 
   }
-
   @Override
   public void disabledPeriodic() {
 
-  }
-
-  public void swerveDrive(ChassisSpeeds speeds) {
-    SwerveModuleState[] moduleStates = sdk.toSwerveModuleStates(speeds);
-    for(int i = 0; i < 4; i++) {
-      swerveModuleControl(moduleStates[0], speeds.omegaRadiansPerSecond, i);
-    }
-  }
-
-  public void swerveModuleControl(SwerveModuleState moduleState, double rotationSpeed, int motorNumber) {
-    double speedMotor;
-    double rotationMotor;
-    speedMotor = moduleState.speedMetersPerSecond;
-    if(frontLeftEncoder.get() % 1.0 < (moduleState.angle.getDegrees() - 5) / 360) {
-      rotationMotor = rotationSpeed;
-    } else if(frontLeftEncoder.get() % 1.0 > (moduleState.angle.getDegrees() - 5) / 360) {
-      rotationMotor = -rotationSpeed;
-    } else {
-      rotationMotor = 0;
-    }
-    motors[motorNumber * 2].set(speedMotor + rotationMotor);
-    motors[motorNumber * 2 + 1].set(speedMotor - rotationMotor);
   }
 }
