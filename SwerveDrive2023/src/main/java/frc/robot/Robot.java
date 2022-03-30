@@ -9,18 +9,22 @@ import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.math.kinematics.*;
+
 import com.revrobotics.CANSparkMax;
+import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
 public class Robot extends TimedRobot {
-  CANSparkMax[] motors;
-  Translation2d[] translations;
-  DutyCycleEncoder[] encoders;
-  MotorGroup[] motorGroups;
-  SwerveDriveKinematics sdk;
-  SwerveDrive swerve;
+  private CANSparkMax[] motors;
+  private Translation2d[] translations;
+  private DutyCycleEncoder[] encoders;
+  private MotorGroup[] motorGroups;
+  private SwerveDriveKinematics sdk;
+  private SwerveDrive swerve;
 
-  Joystick controller;
+  private Joystick controller;
+
+  private IdleMode mode = IdleMode.kBrake;
 
   @Override public void robotInit() {
     translations = new Translation2d[] {
@@ -49,6 +53,8 @@ public class Robot extends TimedRobot {
     motorGroups = new MotorGroup[4];
     for(int i = 0; i < 4; i++) {
       motorGroups[i] = new MotorGroup(motors[i], motors[i + 1], encoders[i]);
+      motorGroups[i].motor1.setIdleMode(mode);
+      motorGroups[i].motor2.setIdleMode(mode);
     }
     sdk = new SwerveDriveKinematics(translations);
     swerve = new SwerveDrive(motorGroups, sdk);
