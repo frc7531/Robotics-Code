@@ -58,8 +58,13 @@ public class Robot extends TimedRobot {
   private float m_rainbowFirstPixelHue = 0;
   //The mode when the motors are idle, either coast or brake
   private boolean idleMode = false; // false = coast, true = brake
+  
+  //DURING AUTONOMOUS: true is to release ball during autonomous, false is to not release the ball
+  private boolean dropBall = false;
 
   private double speedModifier;
+
+  Timer auto = new Timer();
   //The current color mode of the LED strips
   private enum Color {
     red,
@@ -124,6 +129,8 @@ public class Robot extends TimedRobot {
   /**This code runs once when the autonomous period starts */
   @Override
   public void autonomousInit() {
+    auto.start();
+
     color = Color.rainbow;
     //motors braking in autonomous is much more accurate
     leftMotor1.setIdleMode(IdleMode.kBrake);
@@ -133,15 +140,20 @@ public class Robot extends TimedRobot {
     rightMotor2.setIdleMode(IdleMode.kBrake);
     rightMotor3.setIdleMode(IdleMode.kBrake);
     
-    flag.set(Value.kForward);
-    armWrist.set(Value.kReverse);
-    Timer.delay(0.125);
-    leftClaw.set(Value.kForward);
-    rightClaw.set(Value.kReverse);
-    Timer.delay(1);
+    if(dropBall) {
+      flag.set(Value.kForward);
+      armWrist.set(Value.kReverse);
+      Timer.delay(0.125);
+      leftClaw.set(Value.kForward);
+      rightClaw.set(Value.kReverse);
+      Timer.delay(1);
+    }
 
-    moveStraight(-96, 0.1, 0.1);
-    flag.set(Value.kReverse);
+    moveStraight(-108, 0.1, 0.1);
+    e1.setPosition(0);
+    e2.setPosition(0);
+    armWrist.set(Value.kReverse);
+    //flag.set(Value.kReverse);
   }
 
   /**This code runs repeatedly when the autonomous period is active */
@@ -172,15 +184,15 @@ public class Robot extends TimedRobot {
     }
     color = Color.red;
     
-    armMain.set(Value.kForward);
+    //armMain.set(Value.kForward);
   }
 
   /**Code that runs repeatedly when the teleop period is active */
   @Override
   public void teleopPeriodic() {
     //sets winch motors to the Y axis of Driver 2's left thumb stick
-    fieldMotor1.set(Math.copySign(Math.pow(driver2.getRawAxis(1) * 3 / 4, 2), -driver2.getRawAxis(1)));
-    fieldMotor2.set(Math.copySign(Math.pow(driver2.getRawAxis(1) * 3 / 4, 2), -driver2.getRawAxis(1)));
+    fieldMotor1.set(Math.copySign(Math.pow(driver2.getRawAxis(1)/* * 3 / 4*/, 2), -driver2.getRawAxis(1)));
+    fieldMotor2.set(Math.copySign(Math.pow(driver2.getRawAxis(1)/* * 3 / 4*/, 2), -driver2.getRawAxis(1)));
     //controls the drive motors and optionally squares the inputs
     drive(leftStick.getY() * speedModifier, rightStick.getY() * speedModifier, true, 1000);
 
@@ -210,11 +222,28 @@ public class Robot extends TimedRobot {
       }
     }
 
-    if(driver2.getPOV() == 0) armMain.set(Value.kReverse);
-    if(driver2.getPOV() == 180) armMain.set(Value.kForward);
+  if(driver2.getPOV() == 0) {
+    drive(0, 0, false, 0);
+    armWrist.set(Value.kForward);
+    Timer.delay(0.75);
+    armMain.set(Value.kReverse);
+    Timer.delay(0.4);
+    armWrist.set(Value.kReverse);
+    /*t1.reset(); t1.start();*/ 
+  }
+  if(driver2.getPOV() == 180) {
+    drive(0, 0, false, 0);
+    armWrist.set(Value.kForward);
+    Timer.delay(0.4);
+    armMain.set(Value.kForward);
+    Timer.delay(0.75);
+    armWrist.set(Value.kReverse); 
+    /*armMain.set(Value.kForward); t2.reset(); t2.start();*/ 
+  }
     //manual control of the wrist joint
-    if(driver2.getRawButton(4)) armWrist.set(Value.kForward);
-    if(driver2.getRawButton(1)) armWrist.set(Value.kReverse);
+    if(driver2.getRawButton(4)) { armWrist.set(Value.kForward); }
+    if(driver2.getRawButton(1)) { armWrist.set(Value.kReverse); }
+
     //change the color of the LEDs, between red, blue, rainbow, and off
     if(leftStick.getRawButton(3)) color = Color.red;
     if(leftStick.getRawButton(4)) color = Color.rainbow;
@@ -300,7 +329,7 @@ public class Robot extends TimedRobot {
     e2.setPosition(0);
     if(speed > 0.1) {
       speed2 = 0.1;
-      while(Math.abs(e1.getPosition() - rightDistance) > 5 || Math.abs(e2.getPosition() - leftDistance) > 5) {
+      while((Math.abs(e1.getPosition() - rightDistance) > 5 || Math.abs(e2.getPosition() - leftDistance) > 5) && auto.get() < 10.0f) {
         if(e1.getPosition() < rightDistance - 4) {
           rightMotor1.set(speed);
           rightMotor2.set(speed);
@@ -332,7 +361,7 @@ public class Robot extends TimedRobot {
     //precision movement
     boolean state1 = true;
     boolean state2 = true;
-    while(state1 || state2) {
+    while((state1 || state2) && auto.get() < 10.0f) {
       if(e1.getPosition() < rightDistance - precision) {
         state1 = true;
         rightMotor1.set(speed2);
