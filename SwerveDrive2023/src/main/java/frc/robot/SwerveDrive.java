@@ -18,7 +18,7 @@ public class SwerveDrive {
     public void drive(ChassisSpeeds speeds, double rotationSpeed, double marginOfError) {
         SwerveModuleState[] moduleStates = kinematics.toSwerveModuleStates(speeds);
         for(int i = 0; i < numModules; i++) {
-            motorGroups[i].setDifferential(moduleStates[i].speedMetersPerSecond, moduleStates[i].angle.getDegrees(), rotationSpeed, marginOfError);
+            motorGroups[i].setDifferential(moduleStates[i].speedMetersPerSecond / 2, moduleStates[i].angle.getDegrees(), rotationSpeed, marginOfError);
         }
     }
 }

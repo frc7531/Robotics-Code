@@ -27,22 +27,26 @@ public class MotorGroup {
     }
 
     public double getAngle() {
-        if(encoder.get() < 0) {
-            return (encoder.get() % 1.0 + 1) * 360;
-        } else {
-            return (encoder.get() % 1.0) * 360;
-        }
+        return encoder.getAbsolutePosition();
     }
 
     private double setAngle(double target, double speed, double marginOfError) {
+        target /= 360;
         double current = this.getAngle();
-        double temp1 = target - current;
-        double temp2 = target - current - 360;
+        double temp1 = current - target;
+        double temp2 = current - target - 1.0;
         double distance = Math.min(Math.abs(temp1), Math.abs(temp2));
-        if(distance < marginOfError && distance > -5) {
-            return 0;
+        double temp3 = 0.2;
+        if(distance == Math.abs(temp1)) {
+            temp3 = temp1;
+        } else if(distance == Math.abs(temp2)) {
+            temp3 = temp2;
+        }
+        if(Math.abs(temp3) > marginOfError) {
+            return speed * temp3 + 0.1;
         } else {
-            return Math.copySign(speed, distance);
+            System.out.println("inside margin");
+            return 0;
         }
     }
 }
