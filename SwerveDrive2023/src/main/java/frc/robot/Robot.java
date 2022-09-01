@@ -66,7 +66,7 @@ public class Robot extends TimedRobot {
   @Override public void teleopInit() {}
 
   @Override public void teleopPeriodic() {
-    swerve.drive(new ChassisSpeeds(leftJoystick.getRawAxis(0), leftJoystick.getRawAxis(1), rightJoystick.getRawAxis(-0)), 0.5, 0.01);
+    swerve.drive(new ChassisSpeeds(leftJoystick.getRawAxis(0), leftJoystick.getRawAxis(1), rightJoystick.getRawAxis(0)), 0.5, 0.01);
   }
 
   @Override public void disabledInit() {}
