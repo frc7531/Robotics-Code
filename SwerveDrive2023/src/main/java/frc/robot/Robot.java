@@ -29,10 +29,10 @@ public class Robot extends TimedRobot {
 
   @Override public void robotInit() {
     translations = new Translation2d[] {
-      new Translation2d(-0.5, 0.5),
       new Translation2d(-0.5, -0.5),
+      new Translation2d(-0.5, 0.5),
+      new Translation2d(0.5, 0.5),
       new Translation2d(0.5, -0.5),
-      new Translation2d(0.5, 0.5)
     };
     motors = new CANSparkMax[] {
       new CANSparkMax(1, MotorType.kBrushless),
@@ -52,7 +52,7 @@ public class Robot extends TimedRobot {
     };
     motorGroups = new MotorGroup[4];
     for(int i = 0; i < 4; i++) {
-      motorGroups[i] = new MotorGroup(motors[i], motors[i + 1], encoders[i]);
+      motorGroups[i] = new MotorGroup(motors[2*i], motors[2*i + 1], encoders[i]);
     }
     sdk = new SwerveDriveKinematics(translations);
     swerve = new SwerveDrive(motorGroups, sdk);
@@ -66,7 +66,7 @@ public class Robot extends TimedRobot {
   @Override public void teleopInit() {}
 
   @Override public void teleopPeriodic() {
-    swerve.drive(new ChassisSpeeds(leftJoystick.getRawAxis(0), leftJoystick.getRawAxis(1), rightJoystick.getRawAxis(0)), 0.5, 0.01);
+    swerve.drive(new ChassisSpeeds(0, 0, 0.3), 0.4, 0.01);
   }
 
   @Override public void disabledInit() {}

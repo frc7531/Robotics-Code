@@ -16,5 +16,17 @@
       "/LiveWindow/Ungrouped/DigitalInput[2]": "Digital Input",
       "/LiveWindow/Ungrouped/DigitalInput[3]": "Digital Input"
     }
+  },
+  "Plot": {
+    "Plot <0>": {
+      "plots": [
+        {
+          "height": 332
+        }
+      ],
+      "window": {
+        "visible": false
+      }
+    }
   }
 }
