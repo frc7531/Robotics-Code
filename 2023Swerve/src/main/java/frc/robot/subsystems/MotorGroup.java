@@ -1,4 +1,4 @@
-package frc.robot;
+package frc.robot.subsystems;
 
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.RelativeEncoder;
@@ -7,6 +7,7 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.DutyCycleEncoder;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public class MotorGroup {
     public CANSparkMax motor1;
@@ -23,8 +24,8 @@ public class MotorGroup {
         this.encoder = encoder;
         enc1 = motor1.getEncoder();
         enc2 = motor2.getEncoder();
-        this.pid = new PIDController(0.00001, 0.0015, 0.0);
-        this.pid.setTolerance(1);
+        enc1.setVelocityConversionFactor((Math.PI * 8) / (double)35433);
+        enc2.setVelocityConversionFactor((Math.PI * 8) / (double)35433);
     }
 
     public void setDifferential(double speed, double angle, double rotationSpeed, double marginOfError) {
@@ -41,12 +42,12 @@ public class MotorGroup {
     }
 
     public double getAngle() {
-        return encoder.getAbsolutePosition() - encoder.getPositionOffset();
+        return encoder.getAbsolutePosition() * 360;
     }
 
     private double setAngle(double target, double speed, double marginOfError) {
         target /= 360;
-        double current = this.getAngle();
+        double current = this.getAngle() / 360;
         /*double calculated = pid.calculate(current, target);
         System.out.println("Current: " + current + ", Target: " + target + ", Calculated: " + calculated);
         if(calculated > 1) calculated = 1;
@@ -55,7 +56,7 @@ public class MotorGroup {
         double temp1 = current - target;
         double temp2 = current - target - 1.0;
         double distance = Math.min(Math.abs(temp1), Math.abs(temp2));
-        double temp3 = 0.2;
+        double temp3 = 0;
         if(distance == Math.abs(temp1)) {
             temp3 = temp1;
         } else if(distance == Math.abs(temp2)) {
