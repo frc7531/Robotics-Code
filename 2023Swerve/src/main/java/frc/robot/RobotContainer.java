@@ -26,6 +26,9 @@ import frc.robot.subsystems.ExampleSubsystem;
 import frc.robot.subsystems.SwerveDrive;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandBase;
+import edu.wpi.first.wpilibj2.command.CommandGroupBase;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.SwerveControllerCommand;
 
 /**
@@ -47,7 +50,7 @@ public class RobotContainer {
     // Configure the button bindings
     configureButtonBindings();
 
-    SmartDashboard.putData(new Calibrate(swerve));
+    // SmartDashboard.putData(new Calibrate(swerve));
   }
 
   /**
@@ -72,10 +75,10 @@ public class RobotContainer {
     Trajectory trajectory = TrajectoryGenerator.generateTrajectory(
       new Pose2d(0, 0, new Rotation2d(0)),
       List.of(
-        new Translation2d(1, 0),
-        new Translation2d(1, -1)
+        new Translation2d(0, 0),
+        new Translation2d(0.5, 0)
       ),
-      new Pose2d(2, -1, Rotation2d.fromDegrees(180)),
+      new Pose2d(0.5, 0, Rotation2d.fromDegrees(0)),
       trajectoryConfig);
       
     PIDController xController = new PIDController(0.1, 0, 0);
@@ -86,7 +89,7 @@ public class RobotContainer {
 
     thetaController.enableContinuousInput(-Math.PI, Math.PI);
 
-    return new SwerveControllerCommand(
+    Command swerveCommand = new SwerveControllerCommand(
       trajectory,
       swerve::getPose,
       swerve.getKinematics(),
@@ -96,25 +99,10 @@ public class RobotContainer {
       swerve::setModuleStates,
       swerve
     );
-  }
 
-  public Command getTestCommand() {
-    return new CommandBase() {
-      public void execute() {
-        swerve.drive(
-          new ChassisSpeeds(0, 0.2, 0),
-          1,
-          0
-        );
-      }
-
-      public void end(boolean interrupted) {
-        swerve.drive(
-          new ChassisSpeeds(0, 0, 0),
-          1,
-          0
-        );
-      }
-    };
+    return new SequentialCommandGroup(
+      new InstantCommand(() -> swerve.resetOdometer()),
+      swerveCommand
+    );
   }
 }

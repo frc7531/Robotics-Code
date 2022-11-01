@@ -56,8 +56,8 @@ public class TeleopDrive extends CommandBase {
   @Override
   public void execute() {
     swerve.drive(ChassisSpeeds.fromFieldRelativeSpeeds(
-      leftStick.getX() / 3, 
-      leftStick.getY() / 3, 
+      -leftStick.getX() / 3, 
+      -leftStick.getY() / 3, 
       rightStick.getX() / 3,
       Rotation2d.fromDegrees(gyro.getAngle())), 
       1.0, 

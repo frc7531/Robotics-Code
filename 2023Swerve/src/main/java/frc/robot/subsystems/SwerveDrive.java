@@ -94,4 +94,8 @@ public class SwerveDrive extends SubsystemBase {
     public SwerveDriveKinematics getKinematics() { return kinematics; }
 
     public Pose2d getPose() { return odometer.getPoseMeters(); }
+
+    public void resetOdometer() {
+        odometer.resetPosition(new Pose2d(), new Rotation2d(0));
+    }
 }

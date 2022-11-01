@@ -26,11 +26,12 @@ public class MotorGroup {
         enc2 = motor2.getEncoder();
         enc1.setVelocityConversionFactor((Math.PI * 8) / (double)35433);
         enc2.setVelocityConversionFactor((Math.PI * 8) / (double)35433);
+        // pid = new PIDController(0.1, 0, 0);
     }
 
     public void setDifferential(double speed, double angle, double rotationSpeed, double marginOfError) {
         double turnSpeed = this.setAngle(angle, rotationSpeed, marginOfError);
-        //speed = -pid.calculate(this.getDrivingVelocity(), 1000 * speed);
+        // speed = -pid.calculate(this.getDrivingVelocity(), 1000 * speed);
         motor1.set(turnSpeed + speed);
         motor2.set(turnSpeed - speed);
     }
