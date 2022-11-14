@@ -4,7 +4,12 @@
 
 package frc.robot;
 
+import java.io.IOException;
+import java.net.URI;
+import java.nio.file.Path;
 import java.util.List;
+
+import javax.tools.StandardJavaFileManager.PathFactory;
 
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
@@ -12,11 +17,16 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.spline.Spline;
+import edu.wpi.first.math.spline.Spline.ControlVector;
 import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.math.trajectory.TrajectoryConfig;
 import edu.wpi.first.math.trajectory.TrajectoryGenerator;
+import edu.wpi.first.math.trajectory.TrajectoryUtil;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import edu.wpi.first.math.trajectory.TrajectoryGenerator.ControlVectorList;
 import edu.wpi.first.wpilibj.ADXRS450_Gyro;
+import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -46,7 +56,8 @@ public class RobotContainer {
   public RobotContainer() {
     gyro = new ADXRS450_Gyro();
     swerve = new SwerveDrive(gyro);
-    swerve.setDefaultCommand(new TeleopDrive(swerve, gyro));
+    // swerve.setDefaultCommand(new TeleopDrive(swerve, gyro));
+    swerve.setDefaultCommand(new Calibrate(swerve));
     // Configure the button bindings
     configureButtonBindings();
 
@@ -65,27 +76,40 @@ public class RobotContainer {
    * Use this to pass the autonomous command to the main {@link Robot} class.
    *
    * @return the command to run in autonomous
+   * @throws IOException
    */
   public Command getAutonomousCommand() {
     // An ExampleCommand will run in 
-    TrajectoryConfig trajectoryConfig = new TrajectoryConfig(0.25, 0.25)
+    TrajectoryConfig trajectoryConfig = new TrajectoryConfig(2, 0.5)
       .setKinematics(swerve.getKinematics());
 
         // 2. Generate trajectory
-    Trajectory trajectory = TrajectoryGenerator.generateTrajectory(
-      new Pose2d(0, 0, new Rotation2d(0)),
+    Trajectory trajectory;
+
+    trajectory = TrajectoryGenerator.generateTrajectory(
       List.of(
-        new Translation2d(0, 0),
-        new Translation2d(0.5, 0)
+        new Pose2d(0, 0, new Rotation2d(Math.PI / 2)),
+        new Pose2d(0, 0.5, new Rotation2d(Math.PI / 2)),
+        new Pose2d(0, 1, new Rotation2d(Math.PI / 2))
       ),
-      new Pose2d(0.5, 0, Rotation2d.fromDegrees(0)),
       trajectoryConfig);
-      
-    PIDController xController = new PIDController(0.1, 0, 0);
-    PIDController yController = new PIDController(0.1, 0, 0);
+
+    Path trajectoryPath = Filesystem.getDeployDirectory().toPath().resolve("paths/Unnamed.wpilib.json");
+
+    try {
+      trajectory = TrajectoryUtil.fromPathweaverJson(trajectoryPath);
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+
+    PIDController xController = new PIDController(0.4, 0, 0);
+    PIDController yController = new PIDController(0.4, 0, 0);
     ProfiledPIDController thetaController = new ProfiledPIDController(
-      0.05, 0, 0, new TrapezoidProfile.Constraints(0.05, 0.10)
+      1, 0, 0, new TrapezoidProfile.Constraints(3, 2)
     );
+    thetaController.setTolerance(0.001);
+    xController.setTolerance(0.001);
+    yController.setTolerance(0.001);
 
     thetaController.enableContinuousInput(-Math.PI, Math.PI);
 
@@ -96,13 +120,21 @@ public class RobotContainer {
       xController,
       yController,
       thetaController,
+      this::updateTheta,
       swerve::setModuleStates,
       swerve
     );
 
     return new SequentialCommandGroup(
-      new InstantCommand(() -> swerve.resetOdometer()),
-      swerveCommand
+      new InstantCommand(() -> SmartDashboard.putString("status", "Running")),
+      new InstantCommand(() -> swerve.setOdometer(new Pose2d(2, 2, Rotation2d.fromDegrees(0)))),
+      swerveCommand,
+      new InstantCommand(() -> SmartDashboard.putString("status", "Done")),
+      new InstantCommand(() -> swerve.stopMotors())
     );
+  }
+
+  Rotation2d updateTheta() {
+    return new Rotation2d();
   }
 }

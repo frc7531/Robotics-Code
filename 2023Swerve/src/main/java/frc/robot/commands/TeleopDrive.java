@@ -12,6 +12,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.ADXRS450_Gyro;
 import edu.wpi.first.wpilibj.Joystick;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import edu.wpi.first.wpilibj2.command.Subsystem;
@@ -55,10 +56,14 @@ public class TeleopDrive extends CommandBase {
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
+    // MotorGroup[] motorGroups = swerve.getMotorGroups();
+    // for(int i = 0; i < motorGroups.length; i++) {
+    //   SmartDashboard.putNumber("module " + i, motorGroups[i].getAngle());
+    // }
     swerve.drive(ChassisSpeeds.fromFieldRelativeSpeeds(
-      -leftStick.getX() / 3, 
-      -leftStick.getY() / 3, 
-      rightStick.getX() / 3,
+      -leftStick.getX() * 3, 
+      -leftStick.getY() * 3, 
+      rightStick.getX(),
       Rotation2d.fromDegrees(gyro.getAngle())), 
       1.0, 
       0.00

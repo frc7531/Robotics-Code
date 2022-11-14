@@ -37,7 +37,7 @@ public class Calibrate extends CommandBase {
   @Override
   public void execute() {
     if(classic.getRawButton(1)) {
-      swerve.drive(new ChassisSpeeds(0.0, 0.15, 0), 1, 0);
+      swerve.drive(new ChassisSpeeds(0.0, 1, 0), 1, 0);
     } else {
       for(MotorGroup m : swerve.getMotorGroups()) {
         m.motor1.set(0);

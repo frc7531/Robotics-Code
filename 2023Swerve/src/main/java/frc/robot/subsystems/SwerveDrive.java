@@ -69,10 +69,10 @@ public class SwerveDrive extends SubsystemBase {
         for(int i = 0; i < numModules; i++) {
             realStates[i] = motorGroups[i].getState();
         }
-        odometer.update(gyro.getRotation2d(), states);
+        odometer.update(gyro.getRotation2d().times(-1), realStates);
         SmartDashboard.putNumber("X", odometer.getPoseMeters().getX());
         SmartDashboard.putNumber("Y", odometer.getPoseMeters().getY());
-        System.out.println(odometer.getPoseMeters().toString());
+        SmartDashboard.putNumber("Angle", odometer.getPoseMeters().getRotation().getDegrees());
         for(int i = 0; i < numModules; i++) {
             motorGroups[i].setDifferential(states[i].speedMetersPerSecond, states[i].angle.getDegrees(), rotationSpeed, marginOfError);
         }
@@ -87,6 +87,16 @@ public class SwerveDrive extends SubsystemBase {
         applyStates();
     }
 
+    public void stopMotors() {
+        SwerveModuleState[] newStates = new SwerveModuleState[] {
+            new SwerveModuleState(0, Rotation2d.fromDegrees(0)),
+            new SwerveModuleState(0, Rotation2d.fromDegrees(0)),
+            new SwerveModuleState(0, Rotation2d.fromDegrees(0)),
+            new SwerveModuleState(0, Rotation2d.fromDegrees(0))
+        };
+        setModuleStates(newStates);
+    }
+
     public SwerveDriveOdometry getOdometer() { return odometer; }
 
     public MotorGroup[] getMotorGroups() { return motorGroups; }
@@ -97,5 +107,8 @@ public class SwerveDrive extends SubsystemBase {
 
     public void resetOdometer() {
         odometer.resetPosition(new Pose2d(), new Rotation2d(0));
+    }
+    public void setOdometer(Pose2d starting) {
+        odometer.resetPosition(starting, new Rotation2d(0));
     }
 }

@@ -13,10 +13,12 @@ public class MotorGroup {
     public CANSparkMax motor1;
     public CANSparkMax motor2;
     public DutyCycleEncoder encoder;
-    public PIDController pid;
+    public PIDController movePidController;
 
     public RelativeEncoder enc1;
     public RelativeEncoder enc2;
+
+    private static double conversionFactor = (Math.PI * 8) / (double)35433;
 
     public MotorGroup(CANSparkMax motor1, CANSparkMax motor2, DutyCycleEncoder encoder) {
         this.motor1 = motor1;
@@ -24,23 +26,23 @@ public class MotorGroup {
         this.encoder = encoder;
         enc1 = motor1.getEncoder();
         enc2 = motor2.getEncoder();
-        enc1.setVelocityConversionFactor((Math.PI * 8) / (double)35433);
-        enc2.setVelocityConversionFactor((Math.PI * 8) / (double)35433);
-        // pid = new PIDController(0.1, 0, 0);
+        enc1.setVelocityConversionFactor(conversionFactor);
+        enc2.setVelocityConversionFactor(conversionFactor);
+        movePidController = new PIDController(0.1, 0.5, 0);
     }
 
     public void setDifferential(double speed, double angle, double rotationSpeed, double marginOfError) {
         double turnSpeed = this.setAngle(angle, rotationSpeed, marginOfError);
-        // speed = -pid.calculate(this.getDrivingVelocity(), 1000 * speed);
+        speed = movePidController.calculate(this.getDrivingVelocity(), speed);
         motor1.set(turnSpeed + speed);
         motor2.set(turnSpeed - speed);
     }
 
-    public void setNonDifferential(double speed, double angle, double rotationSpeed, double marginOfError) {
-        double turnSpeed = this.setAngle(angle, rotationSpeed, marginOfError);
-        motor1.set(speed);
-        motor2.set(turnSpeed);
-    }
+    // public void setNonDifferential(double speed, double angle, double rotationSpeed, double marginOfError) {
+    //     double turnSpeed = this.setAngle(angle, rotationSpeed, marginOfError);
+    //     motor1.set(speed);
+    //     motor2.set(turnSpeed);
+    // }
 
     public double getAngle() {
         return encoder.getAbsolutePosition() * 360;
@@ -73,7 +75,7 @@ public class MotorGroup {
     public double getDrivingVelocity() {
         double speed1 = enc1.getVelocity();
         double speed2 = enc2.getVelocity();
-        return speed2 - speed1;
+        return speed1 - speed2;
     }
 
     public double getSteeringVelocity() {
