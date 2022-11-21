@@ -28,6 +28,7 @@ import edu.wpi.first.math.trajectory.TrajectoryGenerator.ControlVectorList;
 import edu.wpi.first.wpilibj.ADXRS450_Gyro;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.GenericHID;
+import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.commands.Calibrate;
@@ -51,13 +52,15 @@ public class RobotContainer {
   // The robot's subsystems and commands are defined here...
   private final SwerveDrive swerve;
   private final ADXRS450_Gyro gyro;
+  private final Joystick classic;
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
     gyro = new ADXRS450_Gyro();
     swerve = new SwerveDrive(gyro);
-    // swerve.setDefaultCommand(new TeleopDrive(swerve, gyro));
-    swerve.setDefaultCommand(new Calibrate(swerve));
+    swerve.setDefaultCommand(new TeleopDrive(swerve, gyro));
+    classic = new Joystick(4);
+    // swerve.setDefaultCommand(new Calibrate(swerve));
     // Configure the button bindings
     configureButtonBindings();
 
@@ -124,17 +127,29 @@ public class RobotContainer {
       swerve::setModuleStates,
       swerve
     );
+    Command swerveCommand2 = new SwerveControllerCommand(
+      trajectory,
+      swerve::getPose,
+      swerve.getKinematics(),
+      xController,
+      yController,
+      thetaController,
+      this::updateTheta,
+      swerve::setModuleStates,
+      swerve
+    );
 
     return new SequentialCommandGroup(
       new InstantCommand(() -> SmartDashboard.putString("status", "Running")),
       new InstantCommand(() -> swerve.setOdometer(new Pose2d(2, 2, Rotation2d.fromDegrees(0)))),
       swerveCommand,
+      swerveCommand2,
       new InstantCommand(() -> SmartDashboard.putString("status", "Done")),
       new InstantCommand(() -> swerve.stopMotors())
     );
   }
 
   Rotation2d updateTheta() {
-    return new Rotation2d();
+    return new Rotation2d(classic.getRawAxis(2), classic.getRawAxis(3));
   }
 }

@@ -41,10 +41,11 @@ public class Robot extends TimedRobot {
   // private RelativeEncoder e1 = rightMotor1.getEncoder(Type.kHallSensor, 42);
   // private RelativeEncoder e2 = leftMotor1.getEncoder(Type.kHallSensor, 42);
   //Create Joystick objects for drivers 1 and 2
-  private Joystick leftStick = new Joystick(0);
-  private Joystick rightStick = new Joystick(1);
+  //private Joystick leftStick = new Joystick(0);
+  //private Joystick rightStick = new Joystick(1);
   private Joystick driver2 = new Joystick(2);
   private Joystick wiimote = new Joystick(3);
+  private Joystick logi = new Joystick(0);
   //Create LED objects for the LED strip on the bottom of the robot
   private AddressableLED leds = new AddressableLED(0);
   private AddressableLEDBuffer buffer = new AddressableLEDBuffer(164);
@@ -223,23 +224,23 @@ public class Robot extends TimedRobot {
       //fieldMotor1.set(ControlMode.PercentOutput, Math.copySign(Math.pow(driver2.getRawAxis(1)/* * 3 / 4*/, 2), -driver2.getRawAxis(1)));
       //fieldMotor2.set(ControlMode.PercentOutput, Math.copySign(Math.pow(driver2.getRawAxis(1)/* * 3 / 4*/, 2), -driver2.getRawAxis(1)));
       //controls the drive motors and optionally squares the inputs
-      if(rightStick.getRawButton(2)) speedModifier = 0.4;
-      else if(leftStick.getRawButton(2)) speedModifier = 0.7;
-      else speedModifier = 0.5;
-      drive(leftStick.getY() * speedModifier, rightStick.getY() * speedModifier, true, 1000);
+      if(logi.getRawButton(2)) speedModifier = 0.4;
+      else if(logi.getRawButton(2)) speedModifier = 0.7;
+      else speedModifier = 0.7;
+      drive(logi.getRawAxis(1) * speedModifier, logi.getRawAxis(5) * speedModifier, true, 1000);
       if(driver2.getRawButton(6)) rightClaw.set(Value.kReverse);
       if(driver2.getRawButton(5)) leftClaw.set(Value.kForward);
       if(driver2.getRawAxis(3) > 0.75) rightClaw.set(Value.kForward);
       if(driver2.getRawAxis(2) > 0.75) leftClaw.set(Value.kReverse);
       //driver 1 control
-      if(leftStick.getTriggerPressed()) {
+      if(logi.getTriggerPressed()) {
         if(leftClaw.get() == Value.kForward) {
           leftClaw.set(Value.kReverse);
         } else {
           leftClaw.set(Value.kForward);
         }
       }
-      if(rightStick.getTriggerPressed()) {
+      if(logi.getTriggerPressed()) {
         if(rightClaw.get() == Value.kForward) {
           rightClaw.set(Value.kReverse);
         } else {
@@ -271,10 +272,10 @@ public class Robot extends TimedRobot {
       if(driver2.getRawButton(1)) { armWrist.set(Value.kReverse); }
   
       //change the color of the LEDs, between red, blue, rainbow, and off
-      if(leftStick.getRawButton(3)) color = Color.red;
-      if(leftStick.getRawButton(4)) color = Color.rainbow;
-      if(leftStick.getRawButton(5)) color = Color.blue;
-      if(leftStick.getRawButton(6)) color = Color.off;
+      //if(leftStick.getRawButton(3)) color = Color.red;
+      //if(leftStick.getRawButton(4)) color = Color.rainbow;
+      //if(leftStick.getRawButton(5)) color = Color.blue;
+      //if(leftStick.getRawButton(6)) color = Color.off;
     }
 
     //all the inputs connected to some action

@@ -24,6 +24,7 @@ public class TeleopDrive extends CommandBase {
   private final SwerveDrive swerve;
   private final Joystick leftStick;
   private final Joystick rightStick;
+  private final Joystick classic;
   private final JoystickButton button6;
   private final ADXRS450_Gyro gyro;
 
@@ -37,6 +38,7 @@ public class TeleopDrive extends CommandBase {
     this.gyro = gyro;
     leftStick = new Joystick(0);
     rightStick = new Joystick(1);
+    classic = new Joystick(4);
     button6 = new JoystickButton(leftStick, 6);
     // Use addRequirements() here to declare subsystem dependencies.
     addRequirements(swerve);
@@ -61,9 +63,9 @@ public class TeleopDrive extends CommandBase {
     //   SmartDashboard.putNumber("module " + i, motorGroups[i].getAngle());
     // }
     swerve.drive(ChassisSpeeds.fromFieldRelativeSpeeds(
-      -leftStick.getX() * 3, 
-      -leftStick.getY() * 3, 
-      rightStick.getX(),
+      -classic.getX() * 3, 
+      -classic.getY() * 3, 
+      classic.getZ(),
       Rotation2d.fromDegrees(gyro.getAngle())), 
       1.0, 
       0.00

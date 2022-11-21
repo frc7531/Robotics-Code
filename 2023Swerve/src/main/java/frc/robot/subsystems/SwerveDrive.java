@@ -88,12 +88,7 @@ public class SwerveDrive extends SubsystemBase {
     }
 
     public void stopMotors() {
-        SwerveModuleState[] newStates = new SwerveModuleState[] {
-            new SwerveModuleState(0, Rotation2d.fromDegrees(0)),
-            new SwerveModuleState(0, Rotation2d.fromDegrees(0)),
-            new SwerveModuleState(0, Rotation2d.fromDegrees(0)),
-            new SwerveModuleState(0, Rotation2d.fromDegrees(0))
-        };
+        SwerveModuleState[] newStates = kinematics.toSwerveModuleStates(new ChassisSpeeds(0, 0, 0));
         setModuleStates(newStates);
     }
 
