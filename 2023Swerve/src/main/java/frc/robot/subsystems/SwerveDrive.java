@@ -106,4 +106,8 @@ public class SwerveDrive extends SubsystemBase {
     public void setOdometer(Pose2d starting) {
         odometer.resetPosition(starting, new Rotation2d(0));
     }
+    public void resetGyro() {
+       stopMotors();
+       gyro.calibrate();
+    }
 }

@@ -25,6 +25,7 @@ public class TeleopDrive extends CommandBase {
   private final Joystick leftStick;
   private final Joystick rightStick;
   private final Joystick classic;
+  private final Joystick xbox;
   private final JoystickButton button6;
   private final ADXRS450_Gyro gyro;
 
@@ -39,6 +40,7 @@ public class TeleopDrive extends CommandBase {
     leftStick = new Joystick(0);
     rightStick = new Joystick(1);
     classic = new Joystick(4);
+    xbox = new Joystick(3);
     button6 = new JoystickButton(leftStick, 6);
     // Use addRequirements() here to declare subsystem dependencies.
     addRequirements(swerve);
@@ -47,12 +49,6 @@ public class TeleopDrive extends CommandBase {
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
-    button6.whenActive(new CommandBase() {
-      @Override
-      public void initialize() {
-        gyro.calibrate();
-      }
-    });
   }
 
   // Called every time the scheduler runs while the command is scheduled.
@@ -63,9 +59,9 @@ public class TeleopDrive extends CommandBase {
     //   SmartDashboard.putNumber("module " + i, motorGroups[i].getAngle());
     // }
     swerve.drive(ChassisSpeeds.fromFieldRelativeSpeeds(
-      -classic.getX() * 3, 
-      -classic.getY() * 3, 
-      classic.getZ(),
+      getThrottle(-xbox.getX()), 
+      getThrottle(-xbox.getY()), 
+      getThrottle(xbox.getRawAxis(4)),
       Rotation2d.fromDegrees(gyro.getAngle())), 
       1.0, 
       0.00
@@ -80,5 +76,12 @@ public class TeleopDrive extends CommandBase {
   @Override
   public boolean isFinished() {
     return false;
+  }
+
+  private double getThrottle(double joyStickInput) {
+    if (Math.abs(joyStickInput) < .05){
+      return 0;
+    } 
+    return joyStickInput * 1;
   }
 }

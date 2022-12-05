@@ -30,6 +30,7 @@ import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.XboxController.Button;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.commands.Calibrate;
 import frc.robot.commands.TeleopDrive;
@@ -41,6 +42,7 @@ import edu.wpi.first.wpilibj2.command.CommandGroupBase;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.SwerveControllerCommand;
+import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -53,6 +55,9 @@ public class RobotContainer {
   private final SwerveDrive swerve;
   private final ADXRS450_Gyro gyro;
   private final Joystick classic;
+  private final Joystick logi;
+  private final XboxController xbox;
+  private final JoystickButton yButton;
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
@@ -60,9 +65,19 @@ public class RobotContainer {
     swerve = new SwerveDrive(gyro);
     swerve.setDefaultCommand(new TeleopDrive(swerve, gyro));
     classic = new Joystick(4);
+    logi = new Joystick(5);
     // swerve.setDefaultCommand(new Calibrate(swerve));
     // Configure the button bindings
     configureButtonBindings();
+
+    xbox = new XboxController(3);
+    yButton = new JoystickButton(xbox, 4);
+
+
+    yButton.whenPressed(
+      new InstantCommand(() -> swerve.resetGyro())
+    );
+    
 
     // SmartDashboard.putData(new Calibrate(swerve));
   }
@@ -138,7 +153,7 @@ public class RobotContainer {
       swerve::setModuleStates,
       swerve
     );
-
+    
     return new SequentialCommandGroup(
       new InstantCommand(() -> SmartDashboard.putString("status", "Running")),
       new InstantCommand(() -> swerve.setOdometer(new Pose2d(2, 2, Rotation2d.fromDegrees(0)))),
@@ -150,6 +165,7 @@ public class RobotContainer {
   }
 
   Rotation2d updateTheta() {
-    return new Rotation2d(classic.getRawAxis(2), classic.getRawAxis(3));
+    //return new Rotation2d(classic.getRawAxis(2), classic.getRawAxis(3));
+    return new Rotation2d(logi.getRawAxis(4), logi.getRawAxis(5));
   }
 }

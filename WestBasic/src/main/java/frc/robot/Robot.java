@@ -65,7 +65,7 @@ public class Robot extends TimedRobot {
   //DURING AUTONOMOUS: true is to release ball during autonomous, false is to not release the ball
   private boolean dropBall = false;
 
-  private double speedModifier;
+  private int speedModifier;
 
   Timer auto = new Timer();
   //The current color mode of the LED strips
@@ -85,10 +85,9 @@ public class Robot extends TimedRobot {
     leds.setLength(buffer.getLength());
     leds.setData(buffer);
     leds.start();
-
+    speedModifier = 7;
     // e1.setPositionConversionFactor(3.35);
     // e2.setPositionConversionFactor(3.35);
-
     //invert the right motors because they are facing the other direction
     rightMotor1.setInverted(true);
     rightMotor2.setInverted(true);
@@ -196,7 +195,7 @@ public class Robot extends TimedRobot {
     //sets winch motors to the Y axis of Driver 2's left thumb stick
     if(wiimote.isConnected()) {
       System.out.println("Thinks is connected");
-      speedModifier = 0.7;
+      speedModifier = 7;
       drive(wiimote.getRawAxis(1) * speedModifier, wiimote.getRawAxis(3) * speedModifier, true, 1000);
 
       if(wiimote.getPOV(1) == 0) {
@@ -224,23 +223,27 @@ public class Robot extends TimedRobot {
       //fieldMotor1.set(ControlMode.PercentOutput, Math.copySign(Math.pow(driver2.getRawAxis(1)/* * 3 / 4*/, 2), -driver2.getRawAxis(1)));
       //fieldMotor2.set(ControlMode.PercentOutput, Math.copySign(Math.pow(driver2.getRawAxis(1)/* * 3 / 4*/, 2), -driver2.getRawAxis(1)));
       //controls the drive motors and optionally squares the inputs
-      if(logi.getRawButton(2)) speedModifier = 0.4;
-      else if(logi.getRawButton(2)) speedModifier = 0.7;
-      else speedModifier = 0.7;
-      drive(logi.getRawAxis(1) * speedModifier, logi.getRawAxis(5) * speedModifier, true, 1000);
-      if(driver2.getRawButton(6)) rightClaw.set(Value.kReverse);
-      if(driver2.getRawButton(5)) leftClaw.set(Value.kForward);
-      if(driver2.getRawAxis(3) > 0.75) rightClaw.set(Value.kForward);
-      if(driver2.getRawAxis(2) > 0.75) leftClaw.set(Value.kReverse);
+      
+
+      if(logi.getRawButtonPressed(3) && speedModifier > 3){ speedModifier -= 1;}
+      if(logi.getRawButtonPressed(2) && speedModifier < 10){ speedModifier += 1;}
+      
+      if(logi.getRawButtonPressed(8)) speedModifier = 7;
+      drive((logi.getRawAxis(1) * (speedModifier/10.0d)) , logi.getRawAxis(5) * (speedModifier/10.0d), true, 1000);
+      System.out.println(speedModifier);
+      //if(logi.getRawButton(6)) rightClaw.set(Value.kReverse);
+      //if(logi.getRawButton(5)) leftClaw.set(Value.kForward);
+      //if(logi.getRawAxis(3) > 0.75) rightClaw.set(Value.kForward);
+      //if(logi.getRawAxis(4) > 0.75) leftClaw.set(Value.kReverse);
       //driver 1 control
-      if(logi.getTriggerPressed()) {
+      if(logi.getRawButtonPressed(5)) {
         if(leftClaw.get() == Value.kForward) {
           leftClaw.set(Value.kReverse);
         } else {
           leftClaw.set(Value.kForward);
         }
       }
-      if(logi.getTriggerPressed()) {
+      if(logi.getRawButtonPressed(6)) {
         if(rightClaw.get() == Value.kForward) {
           rightClaw.set(Value.kReverse);
         } else {
@@ -248,7 +251,7 @@ public class Robot extends TimedRobot {
         }
       }
       
-      if(driver2.getPOV() == 0) {
+      if(logi.getPOV() == 0) {
         drive(0, 0, false, 0);
         armWrist.set(Value.kForward);
         Timer.delay(0.75);
@@ -257,7 +260,7 @@ public class Robot extends TimedRobot {
         armWrist.set(Value.kReverse);
         //t1.reset(); t1.start(); 
       }
-      if(driver2.getPOV() == 180) {
+      if(logi.getPOV() == 180) {
         drive(0, 0, false, 0);
         armWrist.set(Value.kForward);
         Timer.delay(0.4);
@@ -268,8 +271,8 @@ public class Robot extends TimedRobot {
       }
   
       //manual control of the wrist joint
-      if(driver2.getRawButton(4)) { armWrist.set(Value.kForward); }
-      if(driver2.getRawButton(1)) { armWrist.set(Value.kReverse); }
+      if(logi.getRawButton(4)) { armWrist.set(Value.kForward); }
+      if(logi.getRawButton(1)) { armWrist.set(Value.kReverse); }
   
       //change the color of the LEDs, between red, blue, rainbow, and off
       //if(leftStick.getRawButton(3)) color = Color.red;
