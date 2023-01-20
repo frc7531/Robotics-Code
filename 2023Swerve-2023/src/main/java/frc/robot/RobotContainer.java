@@ -33,6 +33,7 @@ import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.XboxController.Button;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.commands.Calibrate;
+import frc.robot.commands.PointToTarget;
 import frc.robot.commands.TeleopDrive;
 import frc.robot.subsystems.ExampleSubsystem;
 import frc.robot.subsystems.CameraSubsystem;
@@ -67,9 +68,11 @@ public class RobotContainer {
 
     gyro = new ADXRS450_Gyro();
 
-    cameraSystem = new CameraSubsystem();
-
     swerve = new SwerveDrive(gyro);
+
+    cameraSystem = new CameraSubsystem(swerve);
+    // cameraSystem.setDefaultCommand(new PointToTarget(cameraSystem, swerve));
+
     swerve.setDefaultCommand(new TeleopDrive(swerve, gyro, gXbox));
     // swerve.setDefaultCommand(new Calibrate(swerve));
     // Configure the button bindings
@@ -78,7 +81,7 @@ public class RobotContainer {
     //get joystick buttons
     JoystickButton yButton = new JoystickButton(gXbox, 4);
 
-    yButton.whenPressed(
+    yButton.onTrue(
       new InstantCommand(() -> swerve.resetGyro())
     );
 

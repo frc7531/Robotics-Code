@@ -33,6 +33,7 @@ import edu.wpi.first.wpilibj2.command.button.POVButton;
 public class RobotContainer {
   // The robot's subsystems and commands are defined here...
   Joystick logi;
+  Joystick xbox2;
   private final DriveTrain drive;
   private final Claw claw;
   private JoystickButton rightBumper;
@@ -45,6 +46,7 @@ public class RobotContainer {
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
     logi = new Joystick(0);
+    xbox2 = new Joystick(1);
     rightBumper = new JoystickButton(logi, 6);
     leftBumper = new JoystickButton(logi, 5);
     y = new JoystickButton(logi, 4);
@@ -59,7 +61,7 @@ public class RobotContainer {
     claw = new Claw(logi);
     // Configure the button bindings
     configureButtonBindings();
-    drive.setDefaultCommand(new TeleopDrive(drive, logi));
+    drive.setDefaultCommand(new TeleopDrive(drive, logi, xbox2));
     //claw.setDefaultCommand(new MoveClaw(claw, logi));
     //ParallelCommandGroup clawCommand = new ParallelCommandGroup(new LeftClaw(claw, logi), new RightClaw(claw, logi));
 

@@ -13,18 +13,19 @@ import edu.wpi.first.wpilibj2.command.CommandBase;
 /** An example command that uses an example subsystem. */
 public class Calibrate extends CommandBase {
   private final SwerveDrive swerve;
+
   private final Joystick classic;
 
   /**
    * Creates a new ExampleCommand.
    *
-   * @param subsystem The subsystem used by this command.
+   * @param swerve The swerve subsystem
    */
-  public Calibrate(SwerveDrive subsystem) {
-    swerve = subsystem;
-    classic = new Joystick(4);
+  public Calibrate(SwerveDrive swerve) {
+    this.swerve = swerve;
+    classic = new Joystick(2);
     // Use addRequirements() here to declare subsystem dependencies.
-    addRequirements(subsystem);
+    addRequirements(swerve);
   }
 
   // Called when the command is initially scheduled.

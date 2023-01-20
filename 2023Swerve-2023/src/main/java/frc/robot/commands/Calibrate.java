@@ -4,37 +4,26 @@
 
 package frc.robot.commands;
 
-import frc.robot.subsystems.*;
-
-import edu.wpi.first.math.geometry.Rotation2d;
+import frc.robot.subsystems.MotorGroup;
+import frc.robot.subsystems.SwerveDrive;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.wpilibj.ADXRS450_Gyro;
 import edu.wpi.first.wpilibj.Joystick;
-import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 
 /** An example command that uses an example subsystem. */
-public class TeleopDrive extends CommandBase {
-  @SuppressWarnings({"PMD.UnusedPrivateField", "PMD.SingularField"})
+public class Calibrate extends CommandBase {
   private final SwerveDrive swerve;
-  
-  private final Joystick controller;
 
-  private final ADXRS450_Gyro gyro;
+  private final Joystick classic;
 
   /**
    * Creates a new ExampleCommand.
    *
    * @param swerve The swerve subsystem
-   * @param gyro The robot's gyro
    */
-  public TeleopDrive(SwerveDrive swerve, ADXRS450_Gyro gyro, Joystick controller) {
+  public Calibrate(SwerveDrive swerve) {
     this.swerve = swerve;
-
-    this.controller = controller;
-
-    this.gyro = gyro;
+    classic = new Joystick(2);
     // Use addRequirements() here to declare subsystem dependencies.
     addRequirements(swerve);
   }
@@ -42,20 +31,17 @@ public class TeleopDrive extends CommandBase {
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
+
   }
 
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    //run the swerve drive method
-    swerve.drive(ChassisSpeeds.fromFieldRelativeSpeeds(
-      getThrottle(controller.getX()), 
-      getThrottle(controller.getY()), 
-      getThrottle(-controller.getRawAxis(4)),
-      Rotation2d.fromDegrees(gyro.getAngle())), 
-      1.0, 
-      0.00
-    );
+    if(classic.getRawButton(1)) {
+      swerve.drive(new ChassisSpeeds(0.0, 1, 0), 1, 0);
+    } else {
+      swerve.drive(new ChassisSpeeds(0, 0, 0), 0, 0);
+    }
   }
 
   // Called once the command ends or is interrupted.
@@ -66,12 +52,5 @@ public class TeleopDrive extends CommandBase {
   @Override
   public boolean isFinished() {
     return false;
-  }
-
-  private double getThrottle(double joystickInput) {
-    if (Math.abs(joystickInput) < .05){
-      return 0;
-    } 
-    return joystickInput * 1;
   }
 }

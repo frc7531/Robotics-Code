@@ -16,33 +16,34 @@ public class DriveTrain extends SubsystemBase{
 
 
     public DriveTrain(){
-        motor1 = new TalonSRX(0);
+        // motor1 = new TalonSRX(0);
         motor2 = new TalonSRX(1);
         motor3 = new TalonSRX(2);
         motor4 = new TalonSRX(3);
-        motor5 = new TalonSRX(4);
+        // motor5 = new TalonSRX(4);
         motor6 = new TalonSRX(5);
-        motor1.setInverted(true);
+        // motor1.setInverted(true);
         motor2.setInverted(true);
         motor3.setInverted(true);
        
     }
-
-    public void Left(double leftJoystick){
-        motor1.set(ControlMode.PercentOutput, leftJoystick);
-        motor2.set(ControlMode.PercentOutput, leftJoystick);
-        motor3.set(ControlMode.PercentOutput, leftJoystick);
+    if(driveEnabled){
+    public void left(double leftSpeed){
+        // motor1.set(ControlMode.PercentOutput, leftSpeed);
+        motor2.set(ControlMode.PercentOutput, leftSpeed);
+        motor3.set(ControlMode.PercentOutput, leftSpeed);
       
     }
-    public void Right(double rightJoystick){
-        motor4.set(ControlMode.PercentOutput, rightJoystick);
-        motor5.set(ControlMode.PercentOutput, rightJoystick);
-        motor6.set(ControlMode.PercentOutput, rightJoystick);
+    public void right(double rightSpeed){
+        motor4.set(ControlMode.PercentOutput, rightSpeed);
+        // motor5.set(ControlMode.PercentOutput, rightSpeed);s
+        motor6.set(ControlMode.PercentOutput, rightSpeed);
       
     }
-    public void telopDrive(double leftJoystick, double rightJoystick){
-        Right(rightJoystick);
-        Left(leftJoystick);
+    public void telopDrive(double speed, double rotation){
+        left(speed - rotation);
+        right(speed + rotation);
     }
+}
     
 }
