@@ -25,50 +25,18 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class CameraSubsystem extends SubsystemBase {
-  private Transform3d[] transforms = new Transform3d[32];
-
-  private final PhotonCamera camera;
-
-  private final SwerveDrive swerve;
-
-  private PhotonPipelineResult lastResult;
-
   private static final Transform3d[] absolutePositions = new Transform3d[] {
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    new Transform3d(new Translation3d(0, 0, 0), new Rotation3d(0, 0, 0)),
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
-    null,
+    null, null, null, null, null, null, new Transform3d(new Translation3d(0, 0, 0), new Rotation3d(0, 0, 0)),
+    null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+    null, null, null, null, null, null, null
   };
 
-  /** Creates a new ExampleSubsystem. */
+  private final PhotonCamera camera;
+  private final SwerveDrive swerve;
+
+  private Transform3d[] transforms = new Transform3d[32];
+  private PhotonPipelineResult lastResult;
+
   public CameraSubsystem(SwerveDrive swerve) {
     this.swerve = swerve;
     camera = new PhotonCamera("camera0");
@@ -77,7 +45,6 @@ public class CameraSubsystem extends SubsystemBase {
 
   @Override
   public void periodic() {
-    // This method will be called once per scheduler run
     update();
     if(transforms[0] != null) {
       SmartDashboard.putString("distanceY", transforms[0].toString());
