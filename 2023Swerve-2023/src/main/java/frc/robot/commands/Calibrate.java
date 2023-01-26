@@ -4,7 +4,6 @@
 
 package frc.robot.commands;
 
-import frc.robot.subsystems.MotorGroup;
 import frc.robot.subsystems.SwerveDrive;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.Joystick;
@@ -23,7 +22,7 @@ public class Calibrate extends CommandBase {
    */
   public Calibrate(SwerveDrive swerve) {
     this.swerve = swerve;
-    classic = new Joystick(2);
+    classic = new Joystick(0);
     // Use addRequirements() here to declare subsystem dependencies.
     addRequirements(swerve);
   }

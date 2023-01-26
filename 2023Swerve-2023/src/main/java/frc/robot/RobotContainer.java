@@ -5,42 +5,28 @@
 package frc.robot;
 
 import java.io.IOException;
-import java.net.URI;
 import java.nio.file.Path;
 import java.util.List;
-
-import javax.tools.StandardJavaFileManager.PathFactory;
 
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.math.spline.Spline;
-import edu.wpi.first.math.spline.Spline.ControlVector;
 import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.math.trajectory.TrajectoryConfig;
 import edu.wpi.first.math.trajectory.TrajectoryGenerator;
 import edu.wpi.first.math.trajectory.TrajectoryUtil;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
-import edu.wpi.first.math.trajectory.TrajectoryGenerator.ControlVectorList;
-import edu.wpi.first.wpilibj.ADXRS450_Gyro;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.XboxController;
-import edu.wpi.first.wpilibj.XboxController.Button;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import frc.robot.commands.Calibrate;
-import frc.robot.commands.PointToTarget;
 import frc.robot.commands.TeleopDrive;
-import frc.robot.subsystems.ExampleSubsystem;
 import frc.robot.subsystems.CameraSubsystem;
 import frc.robot.subsystems.SwerveDrive;
+import frc.robot.subsystems.GyroWrapper;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.CommandBase;
-import edu.wpi.first.wpilibj2.command.CommandGroupBase;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.SwerveControllerCommand;
@@ -58,15 +44,15 @@ public class RobotContainer {
   private final CameraSubsystem cameraSystem;
   
   private final Joystick gXbox;
-  private final Joystick rXbox;
+  // private final Joystick rXbox;
 
-  private final ADXRS450_Gyro gyro;
+  private final GyroWrapper gyro;
   
   public RobotContainer() {
     gXbox = new Joystick(0);
-    rXbox = new Joystick(1);  
+    // rXbox = new Joystick(1);
 
-    gyro = new ADXRS450_Gyro();
+    gyro = new GyroWrapper();
 
     swerve = new SwerveDrive(gyro);
 
@@ -118,7 +104,7 @@ public class RobotContainer {
       ),
       trajectoryConfig);
 
-    Path trajectoryPath = Filesystem.getDeployDirectory().toPath().resolve("paths/Unnamed.wpilib.json");
+    Path trajectoryPath = Filesystem.getDeployDirectory().toPath().resolve("paths/BasicTest.wpilib.json");
 
     try {
       trajectory = TrajectoryUtil.fromPathweaverJson(trajectoryPath);
@@ -144,7 +130,7 @@ public class RobotContainer {
       xController,
       yController,
       thetaController,
-      this::updateTheta,
+      // this::updateTheta,
       swerve::setModuleStates,
       swerve
     );
@@ -162,9 +148,7 @@ public class RobotContainer {
     
     return new SequentialCommandGroup(
       new InstantCommand(() -> SmartDashboard.putString("status", "Running")),
-      new InstantCommand(() -> swerve.setOdometer(new Pose2d(2, 2, Rotation2d.fromDegrees(0)))),
       swerveCommand,
-      swerveCommand2,
       new InstantCommand(() -> SmartDashboard.putString("status", "Done")),
       new InstantCommand(() -> swerve.stopMotors())
     );

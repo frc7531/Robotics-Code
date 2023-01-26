@@ -8,7 +8,6 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.DutyCycleEncoder;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public class MotorGroup {
     public CANSparkMax motor1;
@@ -29,6 +28,8 @@ public class MotorGroup {
         enc2 = motor2.getEncoder();
         enc1.setVelocityConversionFactor(conversionFactor);
         enc2.setVelocityConversionFactor(conversionFactor);
+        enc1.setPositionConversionFactor(conversionFactor * 60);
+        enc2.setPositionConversionFactor(conversionFactor * 60);
         movePidController = new PIDController(0.1, 0.5, 0);
     }
 
@@ -88,7 +89,7 @@ public class MotorGroup {
     public double getDrivenDistance() {
         double dist1 = enc1.getPosition();
         double dist2 = enc2.getPosition();
-        return dist2 - dist1;
+        return (dist2 - dist1);
     }
 
     public SwerveModuleState getState() {

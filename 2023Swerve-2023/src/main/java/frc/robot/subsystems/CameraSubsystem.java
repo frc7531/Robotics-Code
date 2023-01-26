@@ -4,11 +4,6 @@
 
 package frc.robot.subsystems;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.swing.TransferHandler.TransferSupport;
-
 import org.photonvision.PhotonCamera;
 import org.photonvision.targeting.PhotonPipelineResult;
 import org.photonvision.targeting.PhotonTrackedTarget;
@@ -16,20 +11,23 @@ import org.photonvision.targeting.PhotonTrackedTarget;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Transform3d;
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
-import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class CameraSubsystem extends SubsystemBase {
   private static final Transform3d[] absolutePositions = new Transform3d[] {
-    null, null, null, null, null, null, new Transform3d(new Translation3d(0, 0, 0), new Rotation3d(0, 0, 0)),
-    null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+    null, null, null, null, null, null,
+    new Transform3d(new Translation3d(0, 2.494, 0.392), new Rotation3d(0, 0, 0)),
+    new Transform3d(new Translation3d(0, 2, 0.385), new Rotation3d(0, 0, 0)),
+    null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
     null, null, null, null, null, null, null
   };
+
+  private static final Transform3d cameraPosition = new Transform3d(new Translation3d(-0.35, 0, -0.17), new Rotation3d(0, 0, 0));
 
   private final PhotonCamera camera;
   private final SwerveDrive swerve;
@@ -70,25 +68,35 @@ public class CameraSubsystem extends SubsystemBase {
     // targets as transforms and subtract where the target is relative to the robot, and
     // that will give us the absolute position of the robot relative to the origin of the
     // field.
-    Transform3d totalGuesses = new Transform3d();
-    double totalWeights = 0;
+    // Transform3d totalGuesses = new Transform3d();
+    // double totalWeights = 0;
 
-    for(PhotonTrackedTarget target : result.targets) {
-      if(absolutePositions[target.getFiducialId()] == null) {
-        continue;
-      }
-      totalGuesses.plus(
-        absolutePositions[target.getFiducialId()]
-          .plus(
-            target.getBestCameraToTarget()
-              .inverse()
-          )
-          .times(1 - target.getPoseAmbiguity())
-      );
-      totalWeights += 1 - target.getPoseAmbiguity();
+    // for(PhotonTrackedTarget target : result.targets) {
+    //   if(absolutePositions[target.getFiducialId()] == null) {
+    //     continue;
+    //   }
+    //   Transform3d guess = absolutePositions[target.getFiducialId()]
+    //     .plus(
+    //       target.getBestCameraToTarget()
+    //         .inverse()
+    //     );
+    //   // guess = guess.times(1 - target.getPoseAmbiguity());
+    //   totalGuesses = totalGuesses.plus(guess);
+    //   totalWeights += 1; // - target.getPoseAmbiguity();
+    // }
+
+    if(absolutePositions[result.getBestTarget().getFiducialId()] == null ||
+      result.getBestTarget().getPoseAmbiguity() > 0.2) {
+      return;
     }
 
-    Transform3d masterPosition = totalGuesses.div(totalWeights);
+    Transform3d masterPosition = // totalGuesses.div(totalWeights);
+    absolutePositions[result.getBestTarget().getFiducialId()]
+      .plus(
+        result.getBestTarget().getBestCameraToTarget()
+          .inverse()
+      )
+      .plus(cameraPosition);
 
     Pose2d masterPose = new Pose2d(
       masterPosition
@@ -98,9 +106,22 @@ public class CameraSubsystem extends SubsystemBase {
         .getRotation()
         .toRotation2d()
     );
-    
-    swerve.setOdometer(masterPose, masterPose.getRotation());
 
+    masterPose = new Pose2d(masterPose.getTranslation(), Rotation2d.fromRadians(-masterPose.getRotation().getRadians()));
+
+    SwerveDriveOdometry odometer = swerve.getOdometer();
+
+    Transform2d change = masterPose.minus(odometer.getPoseMeters());
+    change = change.times(0.4);
+
+    swerve.setOdometer(odometer.getPoseMeters().plus(change), odometer.getPoseMeters().getRotation().plus(change.getRotation()));
+
+    swerve.getGyro().resetAngle(masterPose.getRotation());
+    
+    SmartDashboard.putNumber("X", odometer.getPoseMeters().getX());
+    SmartDashboard.putNumber("Y", odometer.getPoseMeters().getY());
+    SmartDashboard.putNumber("Angle", swerve.getGyro().getRotation2d().getDegrees());
+    
     lastResult = result;
   }
 

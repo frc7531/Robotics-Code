@@ -8,10 +8,7 @@ import frc.robot.subsystems.*;
 
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.wpilibj.ADXRS450_Gyro;
 import edu.wpi.first.wpilibj.Joystick;
-import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 
 /** An example command that uses an example subsystem. */
@@ -21,7 +18,7 @@ public class TeleopDrive extends CommandBase {
   
   private final Joystick controller;
 
-  private final ADXRS450_Gyro gyro;
+  private final GyroWrapper gyro;
 
   /**
    * Creates a new ExampleCommand.
@@ -29,7 +26,7 @@ public class TeleopDrive extends CommandBase {
    * @param swerve The swerve subsystem
    * @param gyro The robot's gyro
    */
-  public TeleopDrive(SwerveDrive swerve, ADXRS450_Gyro gyro, Joystick controller) {
+  public TeleopDrive(SwerveDrive swerve, GyroWrapper gyro, Joystick controller) {
     this.swerve = swerve;
 
     this.controller = controller;
@@ -51,7 +48,7 @@ public class TeleopDrive extends CommandBase {
     swerve.drive(ChassisSpeeds.fromFieldRelativeSpeeds(
       getThrottle(controller.getX()), 
       getThrottle(controller.getY()), 
-      getThrottle(-controller.getRawAxis(4)),
+      getThrottle(-2 * controller.getRawAxis(4)),
       Rotation2d.fromDegrees(gyro.getAngle())), 
       1.0, 
       0.00
