@@ -21,11 +21,18 @@ import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import frc.robot.commands.Calibrate;
+import frc.robot.commands.DumbShoulder;
+import frc.robot.commands.DumbTelescope;
 import frc.robot.commands.TeleopDrive;
 import frc.robot.subsystems.CameraSubsystem;
+import frc.robot.subsystems.Claw;
 import frc.robot.subsystems.SwerveDrive;
+import frc.robot.subsystems.Telescope;
 import frc.robot.subsystems.GyroWrapper;
+import frc.robot.subsystems.Shoulder;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
@@ -40,38 +47,60 @@ import edu.wpi.first.wpilibj2.command.button.JoystickButton;
  */
 public class RobotContainer {
   private final SwerveDrive swerve;
+  private final Shoulder shoulder;
+  private final Telescope telescope;
 
-  private final CameraSubsystem cameraSystem;
+  // private final CameraSubsystem cameraSystem;
   
   private final Joystick gXbox;
-  // private final Joystick rXbox;
+  private final Joystick rXbox;
 
   private final GyroWrapper gyro;
+  private final Claw claw;
+  
+  private final JoystickButton clawButton;
+  private final JoystickButton resetArmEncoderButton;
+
+  private final SendableChooser<Command> teleopChooser;
   
   public RobotContainer() {
     gXbox = new Joystick(0);
-    // rXbox = new Joystick(1);
+    rXbox = new Joystick(1);
 
     gyro = new GyroWrapper();
 
     swerve = new SwerveDrive(gyro);
+    shoulder = new Shoulder();
+    telescope = new Telescope();
 
-    cameraSystem = new CameraSubsystem(swerve);
+    claw = new Claw(gXbox);
+    shoulder.setDefaultCommand(new DumbShoulder(shoulder));
+    telescope.setDefaultCommand(new DumbTelescope(telescope));
+
+    // cameraSystem = new CameraSubsystem(swerve);
     // cameraSystem.setDefaultCommand(new PointToTarget(cameraSystem, swerve));
 
-    swerve.setDefaultCommand(new TeleopDrive(swerve, gyro, gXbox));
-    // swerve.setDefaultCommand(new Calibrate(swerve));
     // Configure the button bindings
     configureButtonBindings();
-
+    
     //get joystick buttons
-    JoystickButton yButton = new JoystickButton(gXbox, 4);
+    clawButton = new JoystickButton(gXbox, 6);
+    resetArmEncoderButton = new JoystickButton(gXbox, 4);
 
-    yButton.onTrue(
-      new InstantCommand(() -> swerve.resetGyro())
-    );
+    clawButton.onTrue(new InstantCommand(() -> claw.crab()));
+    resetArmEncoderButton.onTrue(new InstantCommand(() -> shoulder.resetPosition()));
+
+    // yButton.whileTrue(
+    //   new InstantCommand(() -> gyro.resetAngle(gyro.getRotation2d().plus(Rotation2d.fromDegrees(180))))
+    // );
 
     // SmartDashboard.putData(new Calibrate(swerve));
+
+    teleopChooser = new SendableChooser<>();
+    teleopChooser.setDefaultOption("Drive", new TeleopDrive(swerve, gyro, gXbox));
+    teleopChooser.addOption("Calibrate", new Calibrate(swerve));
+    teleopChooser.addOption("None", null);
+    SmartDashboard.putData("Drive Mode", teleopChooser);
   }
 
   /**
@@ -82,6 +111,10 @@ public class RobotContainer {
    */
   private void configureButtonBindings() {}
 
+  public void startTeleOp() {
+    swerve.setDefaultCommand(teleopChooser.getSelected());
+  }
+
   /**
    * Use this to pass the autonomous command to the main {@link Robot} class.
    *
@@ -89,20 +122,7 @@ public class RobotContainer {
    * @throws IOException
    */
   public Command getAutonomousCommand() {
-    // An ExampleCommand will run in 
-    TrajectoryConfig trajectoryConfig = new TrajectoryConfig(2, 0.5)
-      .setKinematics(swerve.getKinematics());
-
-        // 2. Generate trajectory
     Trajectory trajectory;
-
-    trajectory = TrajectoryGenerator.generateTrajectory(
-      List.of(
-        new Pose2d(0, 0, new Rotation2d(Math.PI / 2)),
-        new Pose2d(0, 0.5, new Rotation2d(Math.PI / 2)),
-        new Pose2d(0, 1, new Rotation2d(Math.PI / 2))
-      ),
-      trajectoryConfig);
 
     Path trajectoryPath = Filesystem.getDeployDirectory().toPath().resolve("paths/BasicTest.wpilib.json");
 
@@ -110,13 +130,15 @@ public class RobotContainer {
       trajectory = TrajectoryUtil.fromPathweaverJson(trajectoryPath);
     } catch (IOException e) {
       e.printStackTrace();
+      return new InstantCommand(() -> {});
     }
 
     PIDController xController = new PIDController(0.4, 0, 0);
     PIDController yController = new PIDController(0.4, 0, 0);
     ProfiledPIDController thetaController = new ProfiledPIDController(
-      1, 0, 0, new TrapezoidProfile.Constraints(3, 2)
+      1, 0, 0, new TrapezoidProfile.Constraints(1, 0.5)
     );
+
     thetaController.setTolerance(0.001);
     xController.setTolerance(0.001);
     yController.setTolerance(0.001);
@@ -130,23 +152,13 @@ public class RobotContainer {
       xController,
       yController,
       thetaController,
-      // this::updateTheta,
-      swerve::setModuleStates,
-      swerve
-    );
-    Command swerveCommand2 = new SwerveControllerCommand(
-      trajectory,
-      swerve::getPose,
-      swerve.getKinematics(),
-      xController,
-      yController,
-      thetaController,
       this::updateTheta,
       swerve::setModuleStates,
       swerve
     );
     
     return new SequentialCommandGroup(
+      new InstantCommand(() -> swerve.setOdometer(new Pose2d(2, 2, Rotation2d.fromDegrees(0)))),
       new InstantCommand(() -> SmartDashboard.putString("status", "Running")),
       swerveCommand,
       new InstantCommand(() -> SmartDashboard.putString("status", "Done")),

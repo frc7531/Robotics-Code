@@ -5,10 +5,19 @@
 package frc.robot;
 
 import edu.wpi.first.wpilibj.GenericHID;
+import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.XboxController;
+import frc.robot.commands.DriveShoulder;
+import frc.robot.commands.DriveTelescope;
 import frc.robot.commands.ExampleCommand;
+import frc.robot.commands.CrabMove;
+import frc.robot.subsystems.Claw;
 import frc.robot.subsystems.ExampleSubsystem;
+import frc.robot.subsystems.Shoulder;
+import frc.robot.subsystems.Telescope;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -20,12 +29,25 @@ public class RobotContainer {
   // The robot's subsystems and commands are defined here...
   private final ExampleSubsystem m_exampleSubsystem = new ExampleSubsystem();
 
+  // private final Shoulder shoulderSubsystem = new Shoulder(1, 2, 0.1);
+  private final Telescope telescope = new Telescope();
+
+  private final Joystick xbox = new Joystick(0);
+  private final Claw claw;
+  public final JoystickButton crabPress;
   private final ExampleCommand m_autoCommand = new ExampleCommand(m_exampleSubsystem);
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
     // Configure the button bindings
+    // shoulderSubsystem.setDefaultCommand(new DriveShoulder(shoulderSubsystem, xbox));
+    claw = new Claw(xbox);
+    crabPress = new JoystickButton(xbox, 4);
+    telescope.setDefaultCommand(new DriveTelescope(telescope, xbox));
+
     configureButtonBindings();
+    crabPress.whenPressed(new InstantCommand(() -> claw.crab()));
+
   }
 
   /**

@@ -13,7 +13,7 @@ public class GyroWrapper extends ADXRS450_Gyro {
 
     @Override
     public Rotation2d getRotation2d() {
-        return super.getRotation2d().minus(offset);
+        return super.getRotation2d().minus(offset).plus(Rotation2d.fromDegrees(180));
     }
 
     public void resetAngle(Rotation2d newAngle) {
