@@ -21,7 +21,7 @@ public class DumbTelescope extends CommandBase {
    */
   public DumbTelescope(Telescope telescope) {
     this.telescope = telescope;
-    xbox = new Joystick(1);
+    xbox = new Joystick(0);
     
     addRequirements(telescope);
   }
@@ -35,7 +35,7 @@ public class DumbTelescope extends CommandBase {
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    telescope.setSpeed(xbox.getRawAxis(5));
+    telescope.setPosition((xbox.getRawAxis(5) + 1) / 2);
   }
 
   // Called once the command ends or is interrupted.

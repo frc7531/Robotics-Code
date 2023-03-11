@@ -2,19 +2,21 @@ package frc.robot.subsystems;
 
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.can.VictorSPX;
-import com.revrobotics.AbsoluteEncoder;
 
 import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.wpilibj.AnalogEncoder;
-import edu.wpi.first.wpilibj.DutyCycleEncoder;
 import edu.wpi.first.wpilibj.Encoder;
-import edu.wpi.first.wpilibj.PWM;
-import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class Shoulder extends SubsystemBase {
+
+    public static final double LOW_TARGET_HEIGHT = 30/360d;
+    public static final double HIGH_TARGET_HEIGHT = 100/360d;
+    public static final double MID_TARGET_HEIGHT = 90/360d;
+    public static final double HUMAN_PLAYER_HEIGHT = 80/360d;
+    
     private final PIDController pid;
+    private boolean enabled = true;
 
     private final VictorSPX leftTop = new VictorSPX(12);
     private final VictorSPX leftBottom = new VictorSPX(13);
@@ -22,15 +24,13 @@ public class Shoulder extends SubsystemBase {
     private final VictorSPX rightTop = new VictorSPX(10);
     private final VictorSPX rightBottom = new VictorSPX(11);
 
-    private final AnalogEncoder encoder = new AnalogEncoder(0);
-
-    private final double throttle = 0.3;
-
-    private double lastPosition = 0;
-    private double lastTime = 0;
+    private final Encoder encoder = new Encoder(6, 7);
 
     public Shoulder() {
-        pid = new PIDController(4, 0, 0.3);
+        pid = new PIDController(3.7, 0, 0.4);
+        pid.enableContinuousInput(0, 1);
+        pid.setSetpoint(0);
+        encoder.setDistancePerPulse(1d/600d);
         encoder.reset();
     }
 
@@ -38,22 +38,38 @@ public class Shoulder extends SubsystemBase {
         encoder.reset();
     }
 
-    public void setSpeed(double inputSpeed) {
-        double target = inputSpeed * throttle;
+    public void update() {
+        double position = (-encoder.getDistance()) % 1d;
+        position = position < 0 ? position + 1 : position;
+        if(position > 0.4 && position < 0.97) {
+            enabled = false;
+        }
+        SmartDashboard.putNumber("position", position);
+        SmartDashboard.putBoolean("shoulder enabled", enabled);
+        
+        if(!enabled) {
+            return;
+        }
 
-        double position = -encoder.getDistance();
+        double movement = pid.calculate(position);
 
-        SmartDashboard.putNumber("current", position);
+        leftTop.set(ControlMode.PercentOutput, movement);
+        leftBottom.set(ControlMode.PercentOutput, movement);
 
-        double movement = pid.calculate(position, target);
-        SmartDashboard.putNumber("movement", movement);
+        rightTop.set(ControlMode.PercentOutput, -movement);
+        rightBottom.set(ControlMode.PercentOutput, -movement);
+    }
 
-        leftTop.set(ControlMode.PercentOutput, -movement);
-        leftBottom.set(ControlMode.PercentOutput, -movement);
+    public void setHeight(double target) {
+        pid.setSetpoint(target);
+    }
 
-        rightTop.set(ControlMode.PercentOutput, movement);
-        rightBottom.set(ControlMode.PercentOutput, movement);
+    public double getHeight() {
+        return pid.getSetpoint();
+    }
 
-        lastPosition = position;
+    @Override
+    public void periodic() {
+        update();
     }
 }

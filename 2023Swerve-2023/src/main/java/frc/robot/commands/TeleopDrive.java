@@ -5,10 +5,11 @@
 package frc.robot.commands;
 
 import frc.robot.subsystems.*;
-
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.Joystick;
+import edu.wpi.first.wpilibj.interfaces.Gyro;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 
 /** An example command that uses an example subsystem. */
@@ -18,7 +19,9 @@ public class TeleopDrive extends CommandBase {
   
   private final Joystick controller;
 
-  private final GyroWrapper gyro;
+  private final Gyro gyro;
+
+  private final PIDController turnPID = new PIDController(0.2, 0, 0);
 
   /**
    * Creates a new ExampleCommand.
@@ -26,7 +29,7 @@ public class TeleopDrive extends CommandBase {
    * @param swerve The swerve subsystem
    * @param gyro The robot's gyro
    */
-  public TeleopDrive(SwerveDrive swerve, GyroWrapper gyro, Joystick controller) {
+  public TeleopDrive(SwerveDrive swerve, Gyro gyro, Joystick controller) {
     this.swerve = swerve;
 
     this.controller = controller;
@@ -45,11 +48,30 @@ public class TeleopDrive extends CommandBase {
   @Override
   public void execute() {
     //run the swerve drive method
+    double xSpeed = -2;
+    double ySpeed = -2;
+    double turnSpeed = -2;
+    if(controller.getRawButton(5)) {
+      xSpeed = -1;
+      ySpeed = -1;
+      turnSpeed = -1;
+    }
+
+    double turnThrottle = getThrottle(controller.getRawAxis(4));
+
+    if(controller.getRawButton(1)) {
+      turnThrottle = turnPID.calculate(gyro.getAngle(), 180);
+    }
+    else if (controller.getRawButton(4)) {
+      turnThrottle = turnPID.calculate(gyro.getAngle(), 0);
+    }
+
     swerve.drive(ChassisSpeeds.fromFieldRelativeSpeeds(
-      getThrottle(controller.getX()), 
-      getThrottle(controller.getY()), 
-      getThrottle(-2 * controller.getRawAxis(4)),
-      Rotation2d.fromDegrees(gyro.getAngle())), 
+      xSpeed * getThrottle(controller.getX()), 
+      ySpeed * getThrottle(controller.getY()), 
+      turnSpeed * turnThrottle,
+      Rotation2d.fromDegrees(gyro.getAngle())),
+      // Rotation2d.fromDegrees(0)), 
       1.0, 
       0.00
     );
@@ -66,7 +88,7 @@ public class TeleopDrive extends CommandBase {
   }
 
   private double getThrottle(double joystickInput) {
-    if (Math.abs(joystickInput) < .05){
+    if (Math.abs(joystickInput) < .1){
       return 0;
     } 
     return joystickInput * 1;

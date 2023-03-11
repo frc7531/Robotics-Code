@@ -116,7 +116,7 @@ public class CameraSubsystem extends SubsystemBase {
 
     swerve.setOdometer(odometer.getPoseMeters().plus(change), odometer.getPoseMeters().getRotation().plus(change.getRotation()));
 
-    swerve.getGyro().resetAngle(masterPose.getRotation());
+    // swerve.getGyro().resetAngle(masterPose.getRotation());
     
     SmartDashboard.putNumber("X", odometer.getPoseMeters().getX());
     SmartDashboard.putNumber("Y", odometer.getPoseMeters().getY());

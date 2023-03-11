@@ -12,6 +12,7 @@ import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.DutyCycleEncoder;
+import edu.wpi.first.wpilibj.interfaces.Gyro;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
@@ -24,7 +25,7 @@ public class SwerveDrive extends SubsystemBase {
     private SwerveModuleState[] states;
     private SwerveModulePosition[] poses;
 
-    private GyroWrapper gyro;
+    private Gyro gyro;
     private SwerveDriveOdometry odometer;
 
     static {
@@ -46,7 +47,7 @@ public class SwerveDrive extends SubsystemBase {
         };
     }
 
-    public SwerveDrive(GyroWrapper gyro) {
+    public SwerveDrive(Gyro gyro) {
         Translation2d[] translations = new Translation2d[] {
             new Translation2d(-0.5, -0.5),
             new Translation2d(0.5, -0.5),
@@ -76,7 +77,7 @@ public class SwerveDrive extends SubsystemBase {
         for(int i = 0; i < numModules; i++) {
             poses[i] = motorGroups[i].getModulePosition();
         }
-        odometer.update(gyro.getRotation2d(), poses);
+        odometer.update(gyro.getRotation2d().times(2), poses);
         SmartDashboard.putNumber("X", odometer.getPoseMeters().getX());
         SmartDashboard.putNumber("Y", odometer.getPoseMeters().getY());
         SmartDashboard.putNumber("Angle", odometer.getPoseMeters().getRotation().getDegrees());
@@ -117,9 +118,9 @@ public class SwerveDrive extends SubsystemBase {
         odometer.resetPosition(rotation, poses, pose);
     }
     public void resetGyro() {
-        gyro.resetAngle();
+        gyro.reset();
     }
-    public GyroWrapper getGyro() {
+    public Gyro getGyro() {
         return gyro;
     }
 }

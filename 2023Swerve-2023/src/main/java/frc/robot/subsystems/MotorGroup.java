@@ -89,7 +89,7 @@ public class MotorGroup {
     public double getDrivenDistance() {
         double dist1 = enc1.getPosition();
         double dist2 = enc2.getPosition();
-        return (dist2 - dist1);
+        return (dist1 - dist2);
     }
 
     public SwerveModuleState getState() {
@@ -97,6 +97,6 @@ public class MotorGroup {
     }
 
     public SwerveModulePosition getModulePosition() {
-        return new SwerveModulePosition(getDrivenDistance(), Rotation2d.fromDegrees(getAngle()));
+        return new SwerveModulePosition(getDrivenDistance(), Rotation2d.fromDegrees(-getAngle()));
     }
 }
