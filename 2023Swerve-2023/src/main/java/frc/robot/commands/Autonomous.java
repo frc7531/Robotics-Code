@@ -31,7 +31,7 @@ import edu.wpi.first.wpilibj2.command.WaitCommand;
 import frc.robot.subsystems.SwerveDrive;
 
 public class Autonomous {
-    public static Command getCommand(SwerveDrive swerve, List<Pose2d> poses, boolean turnAround) {
+    public static Command getCommand(SwerveDrive swerve, List<Pose2d> poses) {
         Trajectory trajectory;
 
         // Path trajectoryPath = Filesystem.getDeployDirectory().toPath().resolve(path);
@@ -49,9 +49,9 @@ public class Autonomous {
         );
 
         PIDController xController = new PIDController(0.4, 0, 0);
-        PIDController yController = new PIDController(-0.4, 0, 0);
+        PIDController yController = new PIDController(0.4, 0, 0);
         ProfiledPIDController thetaController = new ProfiledPIDController(
-            0.6, 0, 0, new TrapezoidProfile.Constraints(0.5, 0.3)
+            0.7, 0, 0, new TrapezoidProfile.Constraints(1, 0.6)
         );
 
         // thetaController.setTolerance(0.01);

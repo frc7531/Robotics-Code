@@ -195,12 +195,12 @@ public class RobotContainer {
     poses2.add(new Pose2d(0, 0, Rotation2d.fromDegrees(0)));
     
     List<Pose2d> poses3 = new ArrayList<>();
-    poses3.add(new Pose2d(0, 0.24, Rotation2d.fromDegrees(0)));
-    poses3.add(new Pose2d(0, 0, Rotation2d.fromDegrees(180)));
+    poses3.add(new Pose2d(0, 0, Rotation2d.fromDegrees(0)));
+    poses3.add(new Pose2d(0, -0.5, Rotation2d.fromDegrees(180)));
 
     List<Pose2d> poses4 = new ArrayList<>();
     poses4.add(new Pose2d(0, 0, Rotation2d.fromDegrees(0)));
-    poses4.add(new Pose2d(0, 2, Rotation2d.fromDegrees(0)));
+    poses4.add(new Pose2d(0, -1, Rotation2d.fromDegrees(0)));
 
     SwerveModuleState[] initialStates = {
       new SwerveModuleState(0, Rotation2d.fromDegrees(0)),
@@ -216,22 +216,23 @@ public class RobotContainer {
         leds.setGamerMode(false);
         leds.setFullStripColor(Color.kRed);
       }),
-      // new ParallelCommandGroup(
-      //   new SetArm(shoulder, telescope, 0.30635, -1300),
-      //   Autonomous.getCommand(swerve, poses1, false)
-      // ),
-      // new WaitCommand(2),
-      // new InstantCommand(() -> claw.crab(false)),
-      // new ParallelCommandGroup(
-      //   Autonomous.getCommand(swerve, poses2, true),
-      //   new SequentialCommandGroup(
-      //     new SetArm(shoulder, telescope, 0.29, 0),
-      //     new SetArm(shoulder, telescope, 0.06, 0)
-      //   )
-      // ),
-      // new Balance2(swerve),
-      // new WaitCommand(10),
-      Autonomous.getCommand(swerve, poses4, true),
+      new ParallelCommandGroup(
+        new SetArm(shoulder, telescope, 0.30635, -1300),
+        Autonomous.getCommand(swerve, poses1)
+      ),
+      new WaitCommand(2),
+      new InstantCommand(() -> claw.crab(false)),
+      new ParallelCommandGroup(
+        Autonomous.getCommand(swerve, poses2),
+        new SequentialCommandGroup(
+          new SetArm(shoulder, telescope, 0.29, 0),
+          new SetArm(shoulder, telescope, 0.06, 0)
+        )
+      ),
+      // Autonomous.getCommand(swerve, poses3),
+      new Balance2(swerve),
+      new WaitCommand(10),
+      // Autonomous.getCommand(swerve, poses4, true),
       new InstantCommand(() -> {
         leds.setFullStripColor(Color.kBlack);
         leds.setGamerMode(true);

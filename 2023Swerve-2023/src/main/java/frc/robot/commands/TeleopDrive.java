@@ -21,7 +21,7 @@ public class TeleopDrive extends CommandBase {
 
   private final Gyro gyro;
 
-  private final PIDController turnPID = new PIDController(0.2, 0, 0);
+  private final PIDController turnPID = new PIDController(0.005, 0.001, 0);
 
   /**
    * Creates a new ExampleCommand.
@@ -35,6 +35,8 @@ public class TeleopDrive extends CommandBase {
     this.controller = controller;
 
     this.gyro = gyro;
+
+    turnPID.enableContinuousInput(0, 360);
     // Use addRequirements() here to declare subsystem dependencies.
     addRequirements(swerve);
   }
@@ -59,12 +61,12 @@ public class TeleopDrive extends CommandBase {
 
     double turnThrottle = getThrottle(controller.getRawAxis(4));
 
-    // if(controller.getRawButton(1)) {
-    //   turnThrottle = turnPID.calculate(gyro.getAngle(), 180);
-    // }
-    // else if (controller.getRawButton(4)) {
-    //   turnThrottle = turnPID.calculate(gyro.getAngle(), 0);
-    // }
+    if(controller.getRawButton(1)) {
+      turnThrottle = turnPID.calculate(Math.IEEEremainder(gyro.getAngle(), 360), 180);
+    }
+    else if (controller.getRawButton(4)) {
+      turnThrottle = turnPID.calculate(gyro.getAngle(), 0);
+    }
 
     swerve.drive(ChassisSpeeds.fromFieldRelativeSpeeds(
       xSpeed * getThrottle(controller.getX()), 

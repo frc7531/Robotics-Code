@@ -89,8 +89,8 @@ public class SwerveDrive extends SubsystemBase {
             poses[i] = motorGroups[i].getModulePosition();
         }
         odometer.update(gyro.getRotation2d(), poses);
-        SmartDashboard.putNumber("X", odometer.getPoseMeters().getX());
-        SmartDashboard.putNumber("Y", odometer.getPoseMeters().getY());
+        SmartDashboard.putNumber("X", getPose().getX());
+        SmartDashboard.putNumber("Y", getPose().getY());
         SmartDashboard.putNumber("Angle", odometer.getPoseMeters().getRotation().getDegrees());
         for(int i = 0; i < numModules; i++) {
             motorGroups[i].setDifferential(states[i].speedMetersPerSecond, states[i].angle.getDegrees(), rotationSpeed, marginOfError);
@@ -121,13 +121,15 @@ public class SwerveDrive extends SubsystemBase {
 
     public SwerveDriveKinematics getKinematics() { return kinematics; }
 
-    public Pose2d getPose() { return odometer.getPoseMeters(); }
+    public Pose2d getPose() {
+        return new Pose2d(odometer.getPoseMeters().getX(), -odometer.getPoseMeters().getY(), odometer.getPoseMeters().getRotation());
+    }
 
     public void resetOdometer() {
         odometer.resetPosition(new Rotation2d(0), poses, new Pose2d());
     }
     public void setOdometer(Pose2d starting) {
-        odometer.resetPosition(new Rotation2d(0), poses, starting);
+        odometer.resetPosition(new Rotation2d(0), poses, new Pose2d(starting.getX(), -starting.getY(), starting.getRotation()));
     }
     public void setOdometer(Pose2d pose, Rotation2d rotation) {
         odometer.resetPosition(rotation, poses, pose);

@@ -38,16 +38,6 @@ public class Shoulder extends SubsystemBase {
     public void update() {
         double position = (encoder.getDistance()) % 1d;
         position = position < 0 ? position + 1 : position;
-        if(position > 0.46 && position < 0.9) {
-            enabled = false;
-        }
-        SmartDashboard.putNumber("position", position);
-        SmartDashboard.putBoolean("shoulder enabled", enabled);
-        
-        if(!enabled) {
-            setMotors(0);
-            return;
-        }
 
         double movement = pid.calculate(position);
 
