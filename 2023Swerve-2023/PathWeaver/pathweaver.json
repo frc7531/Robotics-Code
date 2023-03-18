@@ -4,6 +4,6 @@
   "maxVelocity": 0.5,
   "maxAcceleration": 0.25,
   "trackWidth": 0.6,
-  "gameName": "Galactic Search A",
+  "gameName": "Charged Up",
   "outputDir": ".."
 }

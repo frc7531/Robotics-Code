@@ -5,9 +5,14 @@
 package frc.robot;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 import edu.wpi.first.cameraserver.CameraServer;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.ADXRS450_Gyro;
 import edu.wpi.first.wpilibj.BuiltInAccelerometer;
 import edu.wpi.first.wpilibj.GenericHID;
@@ -20,19 +25,27 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
 import frc.robot.autoroutines.AutoRoutine;
+import frc.robot.commands.Autonomous;
+import frc.robot.commands.Balance;
+import frc.robot.commands.Balance2;
 import frc.robot.commands.Calibrate;
 import frc.robot.commands.DumbTelescope;
+import frc.robot.commands.SetArm;
 import frc.robot.commands.TeleopDrive;
 import frc.robot.commands.UpdateArmPID;
 // import frc.robot.subsystems.CameraSubsystem;
 import frc.robot.subsystems.Claw;
 import frc.robot.subsystems.SwerveDrive;
 import frc.robot.subsystems.Telescope;
+import frc.robot.subsystems.UltraSensor;
 import frc.robot.subsystems.GyroWrapper;
 import frc.robot.subsystems.LEDs;
 import frc.robot.subsystems.Shoulder;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 
 /**
@@ -45,6 +58,7 @@ public class RobotContainer {
   private final SwerveDrive swerve;
   private final Shoulder shoulder;
   private final Telescope telescope;
+  private final UltraSensor sensor;
 
   private final LEDs leds;
 
@@ -59,6 +73,8 @@ public class RobotContainer {
   private final JoystickButton clawButton;
   private final JoystickButton coneButton;
   private final JoystickButton cubeButton;
+
+  private final JoystickButton balanceButton;
 
   private final JoystickButton resetGyroButton;
 
@@ -79,6 +95,7 @@ public class RobotContainer {
     swerve = new SwerveDrive(gyro);
     shoulder = new Shoulder();
     telescope = new Telescope();
+    sensor = new UltraSensor();
     
     //get joystick buttons
     clawButton = new JoystickButton(rXbox, 6);
@@ -88,12 +105,24 @@ public class RobotContainer {
 
     resetGyroButton = new JoystickButton(rXbox, 8);
 
+    balanceButton = new JoystickButton(gXbox, 9);
+
     claw = new Claw(gXbox);
-    shoulder.setDefaultCommand(new UpdateArmPID(shoulder, gXbox));
+    UpdateArmPID uap = new UpdateArmPID(shoulder, telescope, gXbox);
+    shoulder.setDefaultCommand(uap);
     telescope.setDefaultCommand(new DumbTelescope(telescope));
 
-    coneButton.onTrue(new InstantCommand(() -> leds.setFullStripColorRGB(128, 64, 0)));
-    cubeButton.onTrue(new InstantCommand(() -> leds.setFullStripColor(Color.kPurple)));
+    coneButton.onTrue(new InstantCommand(() -> {
+      leds.setFullStripColorRGB(128, 64, 0);
+      uap.setCone();
+      
+    }));
+    cubeButton.onTrue(new InstantCommand(() -> {
+      leds.setFullStripColor(Color.kPurple);
+      uap.setCube();
+    }));
+
+    balanceButton.whileTrue(new Balance2(swerve));
 
     // cameraSystem = new CameraSubsystem(swerve);
     // cameraSystem.setDefaultCommand(new PointToTarget(cameraSystem, swerve));
@@ -151,15 +180,72 @@ public class RobotContainer {
    * @return the command to run in autonomous
    * @throws IOException
    */
+
+  // public Command getJsonPathCommand(String path) {
+  //   // return Autonomous.getCommand(swerve, path);
+  // }
+  
   public Command getAutonomousCommand() {
+    List<Pose2d> poses1 = new ArrayList<>();
+    poses1.add(new Pose2d(0, 0, Rotation2d.fromDegrees(0)));
+    poses1.add(new Pose2d(0, 0.24, Rotation2d.fromDegrees(0)));
+
+    List<Pose2d> poses2 = new ArrayList<>();
+    poses2.add(new Pose2d(0, 0.24, Rotation2d.fromDegrees(0)));
+    poses2.add(new Pose2d(0, 0, Rotation2d.fromDegrees(0)));
+    
+    List<Pose2d> poses3 = new ArrayList<>();
+    poses3.add(new Pose2d(0, 0.24, Rotation2d.fromDegrees(0)));
+    poses3.add(new Pose2d(0, 0, Rotation2d.fromDegrees(180)));
+
+    List<Pose2d> poses4 = new ArrayList<>();
+    poses4.add(new Pose2d(0, 0, Rotation2d.fromDegrees(0)));
+    poses4.add(new Pose2d(0, 2, Rotation2d.fromDegrees(0)));
+
+    SwerveModuleState[] initialStates = {
+      new SwerveModuleState(0, Rotation2d.fromDegrees(0)),
+      new SwerveModuleState(0, Rotation2d.fromDegrees(0)),
+      new SwerveModuleState(0, Rotation2d.fromDegrees(0)),
+      new SwerveModuleState(0, Rotation2d.fromDegrees(0))
+    };
+
+    return new SequentialCommandGroup(
+      // getJsonPathCommand("paths/BasicTest.wpilib.json"),
+      // new InstantCommand(() -> swerve.setModuleStates(initialStates)),
+      new InstantCommand(() -> {
+        leds.setGamerMode(false);
+        leds.setFullStripColor(Color.kRed);
+      }),
+      // new ParallelCommandGroup(
+      //   new SetArm(shoulder, telescope, 0.30635, -1300),
+      //   Autonomous.getCommand(swerve, poses1, false)
+      // ),
+      // new WaitCommand(2),
+      // new InstantCommand(() -> claw.crab(false)),
+      // new ParallelCommandGroup(
+      //   Autonomous.getCommand(swerve, poses2, true),
+      //   new SequentialCommandGroup(
+      //     new SetArm(shoulder, telescope, 0.29, 0),
+      //     new SetArm(shoulder, telescope, 0.06, 0)
+      //   )
+      // ),
+      // new Balance2(swerve),
+      // new WaitCommand(10),
+      Autonomous.getCommand(swerve, poses4, true),
+      new InstantCommand(() -> {
+        leds.setFullStripColor(Color.kBlack);
+        leds.setGamerMode(true);
+      })
+
+    );
+
     // return null;
-    HashMap<String, Command> eventMap = new HashMap<>();
+    // HashMap<String, Command> eventMap = new HashMap<>();
 
-    eventMap.put("Raise Shoulder High Target", new InstantCommand(() -> {
-      shoulder.setHeight(Shoulder.HIGH_TARGET_HEIGHT);
-    }, shoulder));
+    // eventMap.put("Raise Shoulder High Target", new InstantCommand(() -> {
+    // }, shoulder));
 
-    return AutoRoutine.getSwerveCommand(swerve, "Test Circle", eventMap);
+    // return AutoRoutine.getSwerveCommand(swerve, "Test Circle", eventMap);
   //   Trajectory trajectory;
 
   //   Path trajectoryPath = Filesystem.getDeployDirectory().toPath().resolve("paths/BasicTest.wpilib.json");

@@ -59,12 +59,12 @@ public class TeleopDrive extends CommandBase {
 
     double turnThrottle = getThrottle(controller.getRawAxis(4));
 
-    if(controller.getRawButton(1)) {
-      turnThrottle = turnPID.calculate(gyro.getAngle(), 180);
-    }
-    else if (controller.getRawButton(4)) {
-      turnThrottle = turnPID.calculate(gyro.getAngle(), 0);
-    }
+    // if(controller.getRawButton(1)) {
+    //   turnThrottle = turnPID.calculate(gyro.getAngle(), 180);
+    // }
+    // else if (controller.getRawButton(4)) {
+    //   turnThrottle = turnPID.calculate(gyro.getAngle(), 0);
+    // }
 
     swerve.drive(ChassisSpeeds.fromFieldRelativeSpeeds(
       xSpeed * getThrottle(controller.getX()), 

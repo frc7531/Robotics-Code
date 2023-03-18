@@ -10,7 +10,7 @@ public class Claw extends SubsystemBase{
     private DoubleSolenoid crab; 
     private boolean crabTriggered;
     
-    public Claw(Joystick logi){
+    public Claw(Joystick logi) {
         crab = new DoubleSolenoid(9, PneumaticsModuleType.CTREPCM, 0, 1);
         crabTriggered = true;
         
@@ -18,15 +18,18 @@ public class Claw extends SubsystemBase{
         
     }
 
-    public void crab(){
+    public void crab() {
         crabTriggered = !crabTriggered;
         if(crabTriggered){
             crab.set(Value.kForward);
-        }else{
+        } else {
             crab.set(Value.kReverse);
         }
     }
 
-    
+    public void crab(boolean open) {
+        crabTriggered = open;
+        crab.set(open ? Value.kForward : Value.kReverse);
+    }
     
 }

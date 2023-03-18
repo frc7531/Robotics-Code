@@ -6,6 +6,7 @@ package frc.robot.commands;
 
 import frc.robot.subsystems.Telescope;
 import edu.wpi.first.wpilibj.Joystick;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 
 /** An example command that uses an example subsystem. */
@@ -29,13 +30,13 @@ public class DumbTelescope extends CommandBase {
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
-
+    telescope.reset();
   }
 
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    telescope.setPosition((xbox.getRawAxis(5) + 1) / 2);
+    // telescope.setSpeed(xbox.getRawAxis(5));
   }
 
   // Called once the command ends or is interrupted.

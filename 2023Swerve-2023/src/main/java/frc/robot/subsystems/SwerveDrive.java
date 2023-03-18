@@ -22,7 +22,12 @@ public class SwerveDrive extends SubsystemBase {
     private final SwerveDriveKinematics kinematics;
     private MotorGroup[] motorGroups;
     private int numModules;
-    private SwerveModuleState[] states;
+    private SwerveModuleState[] states = {
+        new SwerveModuleState(0, Rotation2d.fromDegrees(0)),
+        new SwerveModuleState(0, Rotation2d.fromDegrees(0)),
+        new SwerveModuleState(0, Rotation2d.fromDegrees(0)),
+        new SwerveModuleState(0, Rotation2d.fromDegrees(0))
+    };
     private SwerveModulePosition[] poses;
 
     private Gyro gyro;
@@ -68,16 +73,22 @@ public class SwerveDrive extends SubsystemBase {
         odometer = new SwerveDriveOdometry(kinematics, gyro.getRotation2d(), poses);
     }
 
+    public void drive(ChassisSpeeds speeds) {
+        drive(speeds, 1, 0);
+    }
+
     public void drive(ChassisSpeeds speeds, double rotationSpeed, double marginOfError) {
+        SmartDashboard.putNumber("speedX", speeds.vxMetersPerSecond);
+        SmartDashboard.putNumber("speedY", speeds.vyMetersPerSecond);
+        // speeds.vxMetersPerSecond *= -1;
         states = kinematics.toSwerveModuleStates(speeds);
-        applyStates(rotationSpeed, marginOfError);
     }
 
     public void applyStates(double rotationSpeed, double marginOfError) {
         for(int i = 0; i < numModules; i++) {
             poses[i] = motorGroups[i].getModulePosition();
         }
-        odometer.update(gyro.getRotation2d().times(2), poses);
+        odometer.update(gyro.getRotation2d(), poses);
         SmartDashboard.putNumber("X", odometer.getPoseMeters().getX());
         SmartDashboard.putNumber("Y", odometer.getPoseMeters().getY());
         SmartDashboard.putNumber("Angle", odometer.getPoseMeters().getRotation().getDegrees());
@@ -92,12 +103,16 @@ public class SwerveDrive extends SubsystemBase {
 
     public void setModuleStates(SwerveModuleState[] states) {
         this.states = states;
-        applyStates();
     }
 
     public void stopMotors() {
         SwerveModuleState[] newStates = kinematics.toSwerveModuleStates(new ChassisSpeeds(0, 0, 0));
         setModuleStates(newStates);
+    }
+
+    @Override
+    public void periodic() {
+        applyStates();
     }
 
     public SwerveDriveOdometry getOdometer() { return odometer; }

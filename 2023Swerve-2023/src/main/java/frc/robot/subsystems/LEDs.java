@@ -1,10 +1,7 @@
 package frc.robot.subsystems;
 
-import javax.xml.crypto.Data;
-
 import edu.wpi.first.wpilibj.AddressableLED;
 import edu.wpi.first.wpilibj.AddressableLEDBuffer;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
@@ -16,17 +13,12 @@ public class LEDs extends SubsystemBase {
 
     private boolean gamerMode = false;
     private double gamerFrequency = 1;
-    private final int length = 142;
+    private final int length = 284; // 142
     public LEDs() {
-        System.out.println("Memory available 1:" + Runtime.getRuntime().freeMemory());
         leds = new AddressableLED(0);
-        // System.out.println("Memory available 2:" + Runtime.getRuntime().freeMemory());
-        // leds1 = new AddressableLED(1);
         ledBuffer = new AddressableLEDBuffer(length);
         leds.setLength(length);
-        // leds1.setLength(length);
         leds.start();
-        // leds1.start();
     }
 
     public void setFullStripColor(Color color) {
@@ -56,9 +48,11 @@ public class LEDs extends SubsystemBase {
 
         double time = (System.currentTimeMillis() / 1000d) % 1;
 
-        for(int i = 0; i < length / 2; i++) {
-            int hue = (int)((time + i / (double)(length / 2)) * gamerFrequency * 180) % 180;
+        for(int i = 0; i < length / 4; i++) {
+            int hue = (int)((time + i / (double)(length / 4)) * gamerFrequency * 180) % 180;
             ledBuffer.setHSV(i, hue, 255, 50);
+            ledBuffer.setHSV(length / 2 - 1 - i, hue, 255, 50);
+            ledBuffer.setHSV(length / 2 + i, hue, 255, 50);
             ledBuffer.setHSV(length - 1 - i, hue, 255, 50);
         }
     }
@@ -69,7 +63,6 @@ public class LEDs extends SubsystemBase {
             iter = 0;
             update();
             leds.setData(ledBuffer);
-            // leds1.setData(ledBuffer);
         }
         iter++;
     }

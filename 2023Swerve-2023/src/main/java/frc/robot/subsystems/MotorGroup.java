@@ -14,6 +14,7 @@ public class MotorGroup {
     public CANSparkMax motor2;
     public DutyCycleEncoder encoder;
     public PIDController movePidController;
+    public PIDController turnPidController;
 
     public RelativeEncoder enc1;
     public RelativeEncoder enc2;
@@ -23,6 +24,8 @@ public class MotorGroup {
     public MotorGroup(CANSparkMax motor1, CANSparkMax motor2, DutyCycleEncoder encoder) {
         this.motor1 = motor1;
         this.motor2 = motor2;
+        motor1.setSmartCurrentLimit(40);
+        motor2.setSmartCurrentLimit(40);
         this.encoder = encoder;
         enc1 = motor1.getEncoder();
         enc2 = motor2.getEncoder();
@@ -31,10 +34,14 @@ public class MotorGroup {
         enc1.setPositionConversionFactor(conversionFactor * 60);
         enc2.setPositionConversionFactor(conversionFactor * 60);
         movePidController = new PIDController(0.1, 0.5, 0);
+        turnPidController = new PIDController(-0.002, 0, 0);
+        turnPidController.setTolerance(0.1);
+        turnPidController.enableContinuousInput(0, 360);
     }
 
     public void setDifferential(double speed, double angle, double rotationSpeed, double marginOfError) {
-        double turnSpeed = this.setAngle(angle, rotationSpeed, marginOfError);
+        // double turnSpeed = this.setAngle(angle, rotationSpeed, marginOfError);
+        double turnSpeed = turnPidController.calculate(getAngle(), angle);
         speed = movePidController.calculate(this.getDrivingVelocity(), speed);
         motor1.set(turnSpeed + speed);
         motor2.set(turnSpeed - speed);
@@ -47,7 +54,7 @@ public class MotorGroup {
     // }
 
     public double getAngle() {
-        return encoder.getAbsolutePosition() * 360;
+        return (encoder.getAbsolutePosition() * 360);
     }
 
     private double setAngle(double target, double speed, double marginOfError) {
