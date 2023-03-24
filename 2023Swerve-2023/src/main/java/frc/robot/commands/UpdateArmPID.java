@@ -13,8 +13,8 @@ public class UpdateArmPID extends CommandBase {
     private double shoulderSetPoint;
     private double telescopeSetPoint;
 
-    private boolean cone;
-    private boolean cube;
+    private boolean cone = true;
+    private boolean cube = false;
 
     public UpdateArmPID(Shoulder shoulder, Telescope telescope, Joystick controller) {
         this.shoulder = shoulder;
@@ -66,23 +66,10 @@ public class UpdateArmPID extends CommandBase {
             telescope.reset();
             shoulderSetPoint = 0;
             telescopeSetPoint = 2000;
+        } if(control.getRawButton(3)) {
+            shoulderSetPoint = 0.237;
+            telescopeSetPoint = 0;
         }
-        // if(control.getRawButton(1)) {        // Low level            (A)
-        //     shoulderSetPoint = Shoulder.LOW_TARGET_HEIGHT;  //                      30°
-        //     telescopeSetPoint = 0;
-        // } else if(control.getRawButton(2)) {        // Mid level            (B)
-        //     shoulderSetPoint = Shoulder.MID_TARGET_HEIGHT;  //                      90°
-        //     // telescopeSetPoint = Telescope.MID_TARGET;
-        // } else if(control.getRawButton(4)) {        // High level           (Y)
-        //     shoulderSetPoint = Shoulder.HIGH_TARGET_HEIGHT; //                      100°
-        //     telescopeSetPoint = 0;
-        // } else if(control.getRawButton(3)) {        // Human player level   (X)
-        //     shoulderSetPoint = Shoulder.HUMAN_PLAYER_HEIGHT;//                      80°
-        //     telescopeSetPoint = 0;
-        // } else if(control.getRawButton(8)) {        // Inward mode button   (=)
-        //     shoulderSetPoint = 0;                           //                      0°
-        //     telescopeSetPoint = 0;
-        // }
         shoulder.setHeight(shoulderSetPoint - control.getRawAxis(1) / 10);
         telescope.setPosition(telescopeSetPoint - control.getRawAxis(5) * 500);
     }

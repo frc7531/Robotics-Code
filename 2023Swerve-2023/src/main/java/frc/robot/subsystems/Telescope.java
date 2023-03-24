@@ -4,7 +4,6 @@ import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 
 import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.wpilibj.AnalogInput;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -31,7 +30,7 @@ public class Telescope extends SubsystemBase {
         SmartDashboard.putBoolean("rear limit switch", !rearLimit.get());
         SmartDashboard.putNumber("tele-coder", encoder.getDistance());
     }
-
+    
     public void setSpeed(double speed) {
         if (!rearLimit.get() && speed > 0) {
             encoder.reset();

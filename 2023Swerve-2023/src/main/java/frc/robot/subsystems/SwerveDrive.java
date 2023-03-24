@@ -115,6 +115,12 @@ public class SwerveDrive extends SubsystemBase {
         applyStates();
     }
 
+    public void resetPID() {
+        for(MotorGroup group : motorGroups) {
+            group.resetPID();
+        }
+    }
+
     public SwerveDriveOdometry getOdometer() { return odometer; }
 
     public MotorGroup[] getMotorGroups() { return motorGroups; }

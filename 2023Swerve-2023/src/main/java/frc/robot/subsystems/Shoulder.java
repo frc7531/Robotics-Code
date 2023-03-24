@@ -5,13 +5,10 @@ import com.ctre.phoenix.motorcontrol.can.VictorSPX;
 
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.AnalogEncoder;
-import edu.wpi.first.wpilibj.Encoder;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class Shoulder extends SubsystemBase {    
     private final PIDController pid;
-    private boolean enabled = true;
 
     private final VictorSPX leftTop = new VictorSPX(12);
     private final VictorSPX leftBottom = new VictorSPX(13);
@@ -26,7 +23,7 @@ public class Shoulder extends SubsystemBase {
         pid = new PIDController(3.7, 0, 0.4);
         pid.enableContinuousInput(0, 1);
         pid.setSetpoint(0);
-        pid.setTolerance(0.07);
+        pid.setTolerance(0.08);
         // encoder.setDistancePerPulse(1d/600d);
         encoder.reset();
     }

@@ -8,8 +8,9 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.DutyCycleEncoder;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
-public class MotorGroup {
+public class MotorGroup extends SubsystemBase {
     public CANSparkMax motor1;
     public CANSparkMax motor2;
     public DutyCycleEncoder encoder;
@@ -33,7 +34,7 @@ public class MotorGroup {
         enc2.setVelocityConversionFactor(conversionFactor);
         enc1.setPositionConversionFactor(conversionFactor * 60);
         enc2.setPositionConversionFactor(conversionFactor * 60);
-        movePidController = new PIDController(0.1, 0.5, 0);
+        movePidController = new PIDController(0.2, 0.5, 0);
         turnPidController = new PIDController(-0.002, 0, 0);
         turnPidController.setTolerance(0.1);
         turnPidController.enableContinuousInput(0, 360);
@@ -57,29 +58,39 @@ public class MotorGroup {
         return (encoder.getAbsolutePosition() * 360);
     }
 
-    private double setAngle(double target, double speed, double marginOfError) {
-        target /= 360;
-        double current = this.getAngle() / 360;
-        /*double calculated = pid.calculate(current, target);
-        System.out.println("Current: " + current + ", Target: " + target + ", Calculated: " + calculated);
-        if(calculated > 1) calculated = 1;
-        if(calculated < -1) calculated = -1;
-        return calculated;*/
-        double temp1 = current - target;
-        double temp2 = current - target - 1.0;
-        double distance = Math.min(Math.abs(temp1), Math.abs(temp2));
-        double temp3 = 0;
-        if(distance == Math.abs(temp1)) {
-            temp3 = temp1;
-        } else if(distance == Math.abs(temp2)) {
-            temp3 = temp2;
-        }
-        if(Math.abs(temp3) > marginOfError) {
-            return speed * temp3;
-        } else {
-            return 0;
-        }
+    public void resetPID() {
+        movePidController.reset();
+        // turnPidController.reset();
     }
+
+    @Override
+    public void periodic() {
+        // resetPID();
+    }
+
+    // private double setAngle(double target, double speed, double marginOfError) {
+    //     target /= 360;
+    //     double current = this.getAngle() / 360;
+    //     /*double calculated = pid.calculate(current, target);
+    //     System.out.println("Current: " + current + ", Target: " + target + ", Calculated: " + calculated);
+    //     if(calculated > 1) calculated = 1;
+    //     if(calculated < -1) calculated = -1;
+    //     return calculated;*/
+    //     double temp1 = current - target;
+    //     double temp2 = current - target - 1.0;
+    //     double distance = Math.min(Math.abs(temp1), Math.abs(temp2));
+    //     double temp3 = 0;
+    //     if(distance == Math.abs(temp1)) {
+    //         temp3 = temp1;
+    //     } else if(distance == Math.abs(temp2)) {
+    //         temp3 = temp2;
+    //     }
+    //     if(Math.abs(temp3) > marginOfError) {
+    //         return speed * temp3;
+    //     } else {
+    //         return 0;
+    //     }
+    // }
 
     public double getDrivingVelocity() {
         double speed1 = enc1.getVelocity();

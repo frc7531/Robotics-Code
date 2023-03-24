@@ -6,7 +6,6 @@ package frc.robot;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 import edu.wpi.first.cameraserver.CameraServer;
@@ -14,33 +13,29 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.ADXRS450_Gyro;
-import edu.wpi.first.wpilibj.BuiltInAccelerometer;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.Joystick;
-import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.XboxController;
-import edu.wpi.first.wpilibj.interfaces.Accelerometer;
 import edu.wpi.first.wpilibj.interfaces.Gyro;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
-import frc.robot.autoroutines.AutoRoutine;
+
 import frc.robot.commands.Autonomous;
-import frc.robot.commands.Balance;
 import frc.robot.commands.Balance2;
 import frc.robot.commands.Calibrate;
 import frc.robot.commands.DumbTelescope;
+import frc.robot.commands.MoveToPoint;
 import frc.robot.commands.SetArm;
 import frc.robot.commands.TeleopDrive;
 import frc.robot.commands.UpdateArmPID;
-// import frc.robot.subsystems.CameraSubsystem;
 import frc.robot.subsystems.Claw;
 import frc.robot.subsystems.SwerveDrive;
 import frc.robot.subsystems.Telescope;
 import frc.robot.subsystems.UltraSensor;
-import frc.robot.subsystems.GyroWrapper;
 import frc.robot.subsystems.LEDs;
 import frc.robot.subsystems.Shoulder;
+
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
@@ -55,21 +50,20 @@ import edu.wpi.first.wpilibj2.command.button.JoystickButton;
  * subsystems, commands, and button mappings) should be declared here.
  */
 public class RobotContainer {
+  // Subsystems
   private final SwerveDrive swerve;
   private final Shoulder shoulder;
   private final Telescope telescope;
-  private final UltraSensor sensor;
-
   private final LEDs leds;
-
+  private final Gyro gyro;
+  private final Claw claw;
   // private final CameraSubsystem cameraSystem;
   
+  // Controllers
   private final Joystick gXbox;
   private final Joystick rXbox;
 
-  private final Gyro gyro;
-  private final Claw claw;
-  
+  // Joystick Buttons
   private final JoystickButton clawButton;
   private final JoystickButton coneButton;
   private final JoystickButton cubeButton;
@@ -77,69 +71,88 @@ public class RobotContainer {
   private final JoystickButton balanceButton;
 
   private final JoystickButton resetGyroButton;
+  private final JoystickButton resetPIDButton;
+  private final JoystickButton moveButton;
 
+  // Sendable Choosers for SmartDashboard / ShuffleBoard
   private final SendableChooser<Command> teleopChooser;
   private final SendableChooser<String> autoChooser;
   
   public RobotContainer() {
+    // Start capture of camera and broadcast to driver station
     CameraServer.startAutomaticCapture();
-
+    // Configure LEDs
     leds = new LEDs();
     leds.setGamerMode(true);
 
+    // Set up controllers
     gXbox = new Joystick(0);
     rXbox = new Joystick(1);
-
+    
+    // Initialize gyro
     gyro = new ADXRS450_Gyro();
-
+    // Primary subsystems
     swerve = new SwerveDrive(gyro);
     shoulder = new Shoulder();
     telescope = new Telescope();
-    sensor = new UltraSensor();
+    claw = new Claw();
+    // Secondary subsystems
+    new UltraSensor();
     
-    //get joystick buttons
-    clawButton = new JoystickButton(rXbox, 6);
-
+    // Initialize JoystickButton objects on Green controller (Driver 2)
     coneButton = new JoystickButton(gXbox, 5);
     cubeButton = new JoystickButton(gXbox, 6);
-
-    resetGyroButton = new JoystickButton(rXbox, 8);
-
     balanceButton = new JoystickButton(gXbox, 9);
+    
+    // Initialize JoystickButton objects on Red controller (Driver 1)
+    clawButton = new JoystickButton(rXbox, 6);
+    resetGyroButton = new JoystickButton(rXbox, 8);
+    resetPIDButton = new JoystickButton(rXbox, 10);
+    moveButton = new JoystickButton(rXbox, 2);
 
-    claw = new Claw(gXbox);
+    // Command to update the arm height and extension
     UpdateArmPID uap = new UpdateArmPID(shoulder, telescope, gXbox);
+
+    // Set default commands for the subsystems
+    swerve.setDefaultCommand(new TeleopDrive(swerve, gyro, rXbox));
     shoulder.setDefaultCommand(uap);
     telescope.setDefaultCommand(new DumbTelescope(telescope));
-
+    
+    // Button to change the arm presets to better suit cones
     coneButton.onTrue(new InstantCommand(() -> {
       leds.setFullStripColorRGB(128, 64, 0);
       uap.setCone();
-      
     }));
+    // Button to change the arm presets to better suit cubes
     cubeButton.onTrue(new InstantCommand(() -> {
       leds.setFullStripColor(Color.kPurple);
       uap.setCube();
     }));
+    // Button to open and close the claw
+    clawButton.onTrue(new InstantCommand(() -> {
+      claw.crab();
+    }));
+    // Button to reset the gyro on the robot to reset its orientation
+    resetGyroButton.whileTrue(new InstantCommand(() -> {
+      gyro.reset();
+    }));
+    // Button to reset the PID controllers responsible for controlling the swerve modules
+    resetPIDButton.whileTrue(new InstantCommand(() -> {
+      swerve.resetPID();
+    }));
 
+    moveButton.whileTrue(new MoveToPoint(swerve, new Pose2d(0.5, -2, Rotation2d.fromDegrees(0))));
+
+    // Temporary button to balance the robot on the charge station
     balanceButton.whileTrue(new Balance2(swerve));
 
     // cameraSystem = new CameraSubsystem(swerve);
     // cameraSystem.setDefaultCommand(new PointToTarget(cameraSystem, swerve));
 
-    // Configure the button bindings
-    configureButtonBindings();
-
-
-    clawButton.onTrue(new InstantCommand(() -> claw.crab()));
     // resetArmEncoderButton.onTrue(new InstantCommand(() -> shoulder.resetPosition()));
 
-    resetGyroButton.whileTrue(
-      new InstantCommand(() -> gyro.reset())
-    );
 
     teleopChooser = new SendableChooser<>();
-    swerve.setDefaultCommand(new TeleopDrive(swerve, gyro, rXbox));
     teleopChooser.setDefaultOption("Drive", new TeleopDrive(swerve, gyro, rXbox));
     teleopChooser.addOption("Calibrate", new Calibrate(swerve));
     teleopChooser.addOption("None", null);
@@ -150,14 +163,6 @@ public class RobotContainer {
     autoChooser.addOption("None", null);
     SmartDashboard.putData("Autonomous", autoChooser);
   }
-
-  /**
-   * Use this method to define your button->command mappings. Buttons can be created by
-   * instantiating a {@link GenericHID} or one of its subclasses ({@link
-   * edu.wpi.first.wpilibj.Joystick} or {@link XboxController}), and then passing it to a {@link
-   * edu.wpi.first.wpilibj2.command.button.JoystickButton}.
-   */
-  private void configureButtonBindings() {}
 
   public void startTeleOp() {
     System.out.println(teleopChooser.getSelected());
@@ -209,18 +214,43 @@ public class RobotContainer {
       new SwerveModuleState(0, Rotation2d.fromDegrees(0))
     };
 
-    return new SequentialCommandGroup(
-      // getJsonPathCommand("paths/BasicTest.wpilib.json"),
-      // new InstantCommand(() -> swerve.setModuleStates(initialStates)),
+    Command leftAuto = new SequentialCommandGroup(
       new InstantCommand(() -> {
         leds.setGamerMode(false);
         leds.setFullStripColor(Color.kRed);
       }),
       new ParallelCommandGroup(
-        new SetArm(shoulder, telescope, 0.30635, -1300),
+        new SetArm(shoulder, telescope, 0.266, -1300),
         Autonomous.getCommand(swerve, poses1)
       ),
-      new WaitCommand(2),
+      new InstantCommand(() -> claw.crab(false)),
+
+      new ParallelCommandGroup(
+        Autonomous.getCommand(swerve, poses2),
+        new SequentialCommandGroup(
+          new SetArm(shoulder, telescope, 0.29, 0),
+          new SetArm(shoulder, telescope, 0.06, 0)
+        )
+      ),
+      new MoveToPoint(swerve, new Pose2d(-0.25, -4, Rotation2d.fromDegrees(0))),
+      new MoveToPoint(swerve, new Pose2d(0, 0, Rotation2d.fromDegrees(180))),
+
+      new InstantCommand(() -> {
+        leds.setFullStripColor(Color.kBlack);
+        leds.setGamerMode(true);
+      })
+
+    );
+
+    Command rightAuto = new SequentialCommandGroup(
+      new InstantCommand(() -> {
+        leds.setGamerMode(false);
+        leds.setFullStripColor(Color.kRed);
+      }),
+      new ParallelCommandGroup(
+        new SetArm(shoulder, telescope, 0.266, -1300),
+        Autonomous.getCommand(swerve, poses1)
+      ),
       new InstantCommand(() -> claw.crab(false)),
       new ParallelCommandGroup(
         Autonomous.getCommand(swerve, poses2),
@@ -229,16 +259,40 @@ public class RobotContainer {
           new SetArm(shoulder, telescope, 0.06, 0)
         )
       ),
-      // Autonomous.getCommand(swerve, poses3),
-      new Balance2(swerve),
-      new WaitCommand(10),
-      // Autonomous.getCommand(swerve, poses4, true),
+      new MoveToPoint(swerve, new Pose2d(0.25, -4, Rotation2d.fromDegrees(0))),
+      new MoveToPoint(swerve, new Pose2d(0, 0, Rotation2d.fromDegrees(180))),
       new InstantCommand(() -> {
         leds.setFullStripColor(Color.kBlack);
         leds.setGamerMode(true);
       })
 
     );
+
+    Command centerAuto = new SequentialCommandGroup(
+      new InstantCommand(() -> {
+        leds.setGamerMode(false);
+        leds.setFullStripColor(Color.kRed);
+      }),
+      new ParallelCommandGroup(
+        new SetArm(shoulder, telescope, 0.266, -1300),
+        Autonomous.getCommand(swerve, poses1)
+      ),
+      new InstantCommand(() -> claw.crab(false)),
+      new ParallelCommandGroup(
+        Autonomous.getCommand(swerve, poses2),
+        new SequentialCommandGroup(
+          new SetArm(shoulder, telescope, 0.29, 0),
+          new SetArm(shoulder, telescope, 0.06, 0)
+        )
+      ),
+      new InstantCommand(() -> {
+        leds.setFullStripColor(Color.kBlack);
+        leds.setGamerMode(true);
+      })
+
+    );
+
+    return rightAuto;
 
     // return null;
     // HashMap<String, Command> eventMap = new HashMap<>();

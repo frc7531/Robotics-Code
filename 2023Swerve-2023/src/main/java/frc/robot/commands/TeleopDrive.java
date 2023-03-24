@@ -57,6 +57,10 @@ public class TeleopDrive extends CommandBase {
       xSpeed = -1;
       ySpeed = -1;
       turnSpeed = -1;
+    } if(controller.getRawAxis(3) >= 0.98) {
+      xSpeed = -3;
+      ySpeed = -3;
+      turnSpeed = -3;
     }
 
     double turnThrottle = getThrottle(controller.getRawAxis(4));

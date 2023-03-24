@@ -5,15 +5,11 @@
 package frc.robot.commands;
 
 import frc.robot.subsystems.Telescope;
-import edu.wpi.first.wpilibj.Joystick;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 
 /** An example command that uses an example subsystem. */
 public class DumbTelescope extends CommandBase {
   private final Telescope telescope;
-
-  private final Joystick xbox;
 
   /**
    * Creates a new ExampleCommand.
@@ -22,7 +18,6 @@ public class DumbTelescope extends CommandBase {
    */
   public DumbTelescope(Telescope telescope) {
     this.telescope = telescope;
-    xbox = new Joystick(0);
     
     addRequirements(telescope);
   }
