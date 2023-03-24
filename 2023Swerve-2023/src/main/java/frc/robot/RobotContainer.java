@@ -71,7 +71,7 @@ public class RobotContainer {
   private final JoystickButton balanceButton;
 
   private final JoystickButton resetGyroButton;
-  private final JoystickButton resetPIDButton;
+  // private final JoystickButton resetPIDButton;
   private final JoystickButton moveButton;
 
   // Sendable Choosers for SmartDashboard / ShuffleBoard
@@ -107,7 +107,7 @@ public class RobotContainer {
     // Initialize JoystickButton objects on Red controller (Driver 1)
     clawButton = new JoystickButton(rXbox, 6);
     resetGyroButton = new JoystickButton(rXbox, 8);
-    resetPIDButton = new JoystickButton(rXbox, 10);
+    // resetPIDButton = new JoystickButton(rXbox, 10);
     moveButton = new JoystickButton(rXbox, 2);
 
     // Command to update the arm height and extension
@@ -137,9 +137,9 @@ public class RobotContainer {
       gyro.reset();
     }));
     // Button to reset the PID controllers responsible for controlling the swerve modules
-    resetPIDButton.whileTrue(new InstantCommand(() -> {
-      swerve.resetPID();
-    }));
+    // resetPIDButton.whileTrue(new InstantCommand(() -> {
+    //   swerve.resetPID();
+    // }));
 
     moveButton.whileTrue(new MoveToPoint(swerve, new Pose2d(0.5, -2, Rotation2d.fromDegrees(0))));
 
@@ -292,7 +292,7 @@ public class RobotContainer {
 
     );
 
-    return rightAuto;
+    return leftAuto;
 
     // return null;
     // HashMap<String, Command> eventMap = new HashMap<>();
