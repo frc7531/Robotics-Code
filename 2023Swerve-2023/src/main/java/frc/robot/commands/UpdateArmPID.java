@@ -71,7 +71,7 @@ public class UpdateArmPID extends CommandBase {
             telescopeSetPoint = 0;
         }
         shoulder.setHeight(shoulderSetPoint - control.getRawAxis(1) / 10);
-        telescope.setPosition(telescopeSetPoint - control.getRawAxis(5) * 500);
+        telescope.setPosition(telescopeSetPoint + control.getRawAxis(5) * 500);
     }
 
     @Override
