@@ -114,7 +114,7 @@ public class RobotContainer {
     UpdateArmPID uap = new UpdateArmPID(shoulder, telescope, gXbox);
 
     // Set default commands for the subsystems
-    swerve.setDefaultCommand(new TeleopDrive(swerve, gyro, rXbox));
+    swerve.setDefaultCommand(new TeleopDrive(swerve, gyro, rXbox, gXbox));
     shoulder.setDefaultCommand(uap);
     telescope.setDefaultCommand(new DumbTelescope(telescope));
     
@@ -153,7 +153,7 @@ public class RobotContainer {
 
 
     teleopChooser = new SendableChooser<>();
-    teleopChooser.setDefaultOption("Drive", new TeleopDrive(swerve, gyro, rXbox));
+    teleopChooser.setDefaultOption("Drive", new TeleopDrive(swerve, gyro, rXbox, gXbox));
     teleopChooser.addOption("Calibrate", new Calibrate(swerve));
     teleopChooser.addOption("None", null);
     SmartDashboard.putData("Drive Mode", teleopChooser);
@@ -292,7 +292,7 @@ public class RobotContainer {
 
     );
 
-    return leftAuto;
+    return rightAuto;
 
     // return null;
     // HashMap<String, Command> eventMap = new HashMap<>();

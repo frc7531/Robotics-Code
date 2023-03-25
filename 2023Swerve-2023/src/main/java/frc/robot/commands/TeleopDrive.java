@@ -18,6 +18,7 @@ public class TeleopDrive extends CommandBase {
   private final SwerveDrive swerve;
   
   private final Joystick controller;
+  private final Joystick driver2;
 
   private final Gyro gyro;
 
@@ -29,10 +30,11 @@ public class TeleopDrive extends CommandBase {
    * @param swerve The swerve subsystem
    * @param gyro The robot's gyro
    */
-  public TeleopDrive(SwerveDrive swerve, Gyro gyro, Joystick controller) {
+  public TeleopDrive(SwerveDrive swerve, Gyro gyro, Joystick controller, Joystick driver2) {
     this.swerve = swerve;
 
     this.controller = controller;
+    this.driver2 = driver2;
 
     this.gyro = gyro;
 
@@ -78,11 +80,8 @@ public class TeleopDrive extends CommandBase {
       xSpeed * getThrottle(controller.getX()), 
       ySpeed * getThrottle(controller.getY()), 
       turnSpeed * turnThrottle,
-      Rotation2d.fromDegrees(gyro.getAngle())),
-      // Rotation2d.fromDegrees(0)), 
-      1.0, 
-      0.00
-    );
+      driver2.getRawAxis(2) >= 0.98 ? Rotation2d.fromDegrees(0) : Rotation2d.fromDegrees(gyro.getAngle())
+    ), 1.0, 0.00);
   }
 
   // Called once the command ends or is interrupted.
